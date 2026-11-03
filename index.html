@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f1">
+  <title>UniLoop · Κοινόχρηστα αυτοκίνητα στην Αθήνα</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #19332c;
+      --muted: #78827a;
+      --line: #e9ebe3;
+      --canvas: #f6f7f1;
+      --paper: #fff;
+      --green: #245c47;
+      --green-soft: #eaf2e7;
+      --lime: #d6ef70;
+      --mono: "DM Mono", monospace;
+      --sans: "DM Sans", "Noto Sans", sans-serif;
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--canvas);
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    * { box-sizing: border-box; }
+    body { min-width: 320px; min-height: 100vh; margin: 0; }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #aac64b; outline-offset: 3px; }
+    button:disabled { cursor: not-allowed; opacity: .48; }
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar { position: relative; z-index: 8; display: flex; align-items: center; gap: 27px; min-height: 72px; padding: 0 34px; background: var(--paper); border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+    .brand-mark { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 11px; background: var(--lime); color: var(--ink); font-size: 19px; font-weight: 800; }
+    .brand-name { font-size: 19px; font-weight: 800; letter-spacing: 0; }
+    .brand-name span { color: var(--green); }
+    .top-divider { width: 1px; height: 30px; background: var(--line); }
+    .campus-button { display: flex; align-items: center; gap: 9px; padding: 8px 0; border: 0; background: transparent; text-align: left; cursor: pointer; }
+    .campus-symbol { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; background: #edf2e8; color: var(--green); font-size: 15px; }
+    .campus-copy { display: grid; gap: 2px; }
+    .campus-copy strong { font-size: 12px; font-weight: 700; }
+    .campus-copy small { color: var(--muted); font-size: 10px; }
+    .search { position: relative; display: flex; align-items: center; gap: 10px; width: min(350px, 32vw); min-height: 40px; margin-left: auto; padding: 0 14px; border: 1px solid var(--line); border-radius: 7px; background: #fafbf8; color: #78827a; }
+    .search svg { flex: 0 0 auto; }
+    .search input { width: 100%; min-width: 0; padding: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 12px; }
+    .search input::placeholder { color: #929b93; }
+    .search input:focus-visible { outline: 0; }
+    .search-key { flex: 0 0 auto; color: #929b93; font-family: var(--mono); font-size: 10px; }
+    .header-meta { display: flex; align-items: center; gap: 13px; }
+    .credits { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .credits strong { color: var(--ink); font-family: var(--mono); font-size: 12px; font-weight: 500; }
+    .avatar { display: grid; width: 34px; height: 34px; padding: 0; place-items: center; border: 1px solid #dfe6da; border-radius: 50%; background: #edf2e8; color: var(--green); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .workspace { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr) 366px; min-height: 660px; }
+    .map { position: relative; min-height: 660px; overflow: hidden; isolation: isolate; background: #eef0e5; }
+    .map-art { position: absolute; inset: -35px; overflow: hidden; background-color: #eef0e5; background-image: radial-gradient(ellipse at 29% 27%, #dcebd4 0, #dcebd4 11%, transparent 11.3%), radial-gradient(ellipse at 75% 73%, #e0ead3 0, #e0ead3 15%, transparent 15.3%), radial-gradient(ellipse at 82% 19%, #e1ecd8 0, #e1ecd8 12%, transparent 12.3%); }
+    .map-art::after { position: absolute; z-index: 1; inset: 0; background-image: radial-gradient(#8b987d 0.6px, transparent .6px); background-size: 22px 22px; opacity: .19; content: ""; pointer-events: none; }
+    .road { position: absolute; z-index: 1; background: #fffdf6; box-shadow: 0 0 0 1px #e6e5d7; }
+    .road.horizontal { top: 48%; left: -5%; width: 110%; height: 43px; transform: rotate(-8deg); }
+    .road.vertical { top: -10%; left: 52%; width: 41px; height: 120%; transform: rotate(17deg); }
+    .road.diagonal { top: 18%; left: 5%; width: 100%; height: 28px; transform: rotate(32deg); }
+    .road.side { top: 69%; left: 0; width: 75%; height: 24px; transform: rotate(11deg); }
+    .path { position: absolute; z-index: 1; border: 2px dashed #d1d5c7; border-radius: 50%; }
+    .path.one { top: 18%; left: 19%; width: 37%; height: 34%; transform: rotate(-24deg); }
+    .path.two { right: 12%; bottom: 12%; width: 29%; height: 40%; transform: rotate(34deg); }
+    .building { position: absolute; z-index: 2; display: grid; min-width: 74px; min-height: 46px; padding: 9px 10px; align-content: center; border: 1px solid rgba(97, 112, 82, .12); border-radius: 4px; background: #faf9ed; box-shadow: 0 2px 6px #66725110; color: #707962; font-size: 10px; line-height: 1.5; text-align: center; }
+    .building em { color: #a0a58e; font-size: 8px; font-style: normal; }
+    .b-library { top: 21%; left: 39%; width: 125px; height: 70px; }
+    .b-science { top: 33%; left: 69%; width: 107px; height: 63px; }
+    .b-south { top: 71%; left: 46%; width: 95px; height: 63px; }
+    .b-student { top: 72%; left: 18%; width: 113px; height: 65px; }
+    .b-gym { top: 18%; left: 75%; width: 83px; height: 53px; }
+    .b-west { top: 44%; left: 17%; width: 95px; height: 58px; }
+    .green-space { position: absolute; z-index: 0; border-radius: 44% 56% 63% 37%; background: #dae8cd; }
+    .green-one { top: 20%; left: 15%; width: 170px; height: 128px; transform: rotate(-21deg); }
+    .green-two { right: 11%; bottom: 12%; width: 202px; height: 136px; transform: rotate(17deg); }
+    .map-caption { position: absolute; z-index: 2; color: #869077; font-size: 9px; font-weight: 600; letter-spacing: .3px; }
+    .caption-lake { top: 28%; left: 21%; }
+    .caption-lawn { right: 16%; bottom: 24%; }
+    .map-label { position: absolute; z-index: 3; top: 21px; left: 24px; display: flex; align-items: center; gap: 7px; padding: 9px 12px; border: 1px solid #e6e9e0; border-radius: 6px; background: #fff; box-shadow: 0 3px 12px #24372d0b; font-size: 11px; font-weight: 700; }
+    .map-label span { color: var(--muted); font-size: 10px; font-weight: 400; }
+    .map-filter { position: absolute; z-index: 4; top: 21px; right: 24px; display: flex; padding: 3px; border: 1px solid #e6e9e0; border-radius: 7px; background: #fff; box-shadow: 0 3px 12px #24372d0b; }
+    .filter-button { padding: 7px 11px; border: 0; border-radius: 5px; background: transparent; color: var(--muted); font-size: 10px; font-weight: 600; cursor: pointer; }
+    .filter-button.active { background: var(--green); color: #fff; }
+    .map-markers { position: absolute; z-index: 4; inset: 0; }
+    .map-marker { position: absolute; display: flex; min-width: 58px; min-height: 43px; padding: 3px 8px 3px 4px; align-items: center; gap: 5px; border: 1px solid #e5e9dd; border-radius: 9px; background: #fff; box-shadow: 0 3px 11px #1d31261c; cursor: pointer; transition: transform .18s, border-color .18s; }
+    .map-marker:hover, .map-marker.selected { transform: translateY(-2px); border-color: #8caa68; }
+    .marker-icon { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border-radius: 6px; background: #edf3e6; color: var(--green); }
+    .marker-price { font-family: var(--mono); font-size: 11px; font-weight: 500; white-space: nowrap; }
+    .marker-price small { color: var(--muted); font-family: var(--sans); font-size: 8px; }
+    .location-dot { position: absolute; z-index: 4; top: 55%; left: 46%; display: grid; width: 19px; height: 19px; place-items: center; border: 3px solid #fff; border-radius: 50%; background: #5485d4; box-shadow: 0 1px 5px #17291a50; }
+    .location-dot::after { position: absolute; width: 38px; height: 38px; border: 1px solid #5485d44f; border-radius: 50%; content: ""; }
+    .map-controls { position: absolute; z-index: 4; right: 22px; bottom: 90px; display: grid; overflow: hidden; border: 1px solid #e4e6de; border-radius: 7px; background: #fff; box-shadow: 0 3px 12px #24372d0b; }
+    .map-control { display: grid; width: 37px; height: 37px; place-items: center; border: 0; background: #fff; color: #48594c; font-size: 18px; cursor: pointer; }
+    .map-control + .map-control { border-top: 1px solid var(--line); }
+    .map-scale { position: absolute; z-index: 3; bottom: 24px; left: 25px; display: flex; align-items: center; gap: 7px; color: #687365; font-family: var(--mono); font-size: 9px; }
+    .map-scale::before { width: 27px; height: 4px; border: 1px solid #697263; border-top: 0; content: ""; }
+    .side-panel { z-index: 5; display: flex; min-height: 0; flex-direction: column; overflow: hidden; border-left: 1px solid var(--line); background: #fff; }
+    .panel-heading { display: flex; min-height: 79px; padding: 18px 20px 14px; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .eyebrow { margin: 0 0 5px; color: var(--muted); font-size: 9px; font-weight: 600; letter-spacing: 1px; }
+    .panel-heading h1 { margin: 0; font-size: 17px; font-weight: 700; }
+    .available { display: flex; padding-top: 17px; align-items: center; gap: 6px; color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .available i { width: 7px; height: 7px; border-radius: 50%; background: #8cb454; }
+    .vehicle-list { overflow: auto; padding: 6px 15px 20px; }
+    .vehicle-card { display: grid; width: 100%; grid-template-columns: 63px 1fr auto; gap: 11px; padding: 15px 5px; align-items: center; border: 0; border-bottom: 1px solid #eff0ea; background: transparent; text-align: left; cursor: pointer; transition: background .18s; }
+    .vehicle-card:hover { background: #fafbf7; }
+    .car-thumb { display: grid; width: 63px; height: 53px; place-items: center; overflow: hidden; border-radius: 5px; background: #eef1e6; color: #49624d; }
+    .car-thumb svg { width: 45px; height: 32px; }
+    .car-info { display: grid; gap: 5px; min-width: 0; }
+    .car-info strong { overflow: hidden; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .car-info span { color: var(--muted); font-size: 9px; white-space: nowrap; }
+    .car-info span b { color: #547946; font-weight: 600; }
+    .car-price { align-self: start; padding-top: 3px; font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+    .car-price small { color: var(--muted); font-family: var(--sans); font-size: 9px; }
+    .side-foot { display: flex; margin-top: auto; padding: 15px 19px; justify-content: space-between; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; }
+    .side-foot strong { color: var(--ink); font-weight: 600; }
+    .mobile-nav { display: none; }
+    .empty-state { padding: 42px 12px; color: var(--muted); font-size: 12px; line-height: 1.7; text-align: center; }
+    .scrim { position: fixed; z-index: 12; inset: 0; background: #10251c70; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+    .scrim.visible { opacity: 1; pointer-events: auto; }
+    .vehicle-sheet { position: fixed; z-index: 13; right: 0; bottom: 0; width: min(460px, 100%); max-height: 90dvh; overflow-y: auto; padding: 23px 25px max(24px, env(safe-area-inset-bottom)); border: 1px solid var(--line); border-radius: 11px 11px 0 0; background: #fff; box-shadow: 0 -12px 50px #10251c24; transform: translateY(105%); transition: transform .32s cubic-bezier(.2,.8,.2,1); }
+    .vehicle-sheet.open { transform: translateY(0); }
+    .sheet-handle { width: 34px; height: 4px; margin: -7px auto 17px; border-radius: 5px; background: #e1e4dc; }
+    .sheet-top { display: flex; align-items: center; justify-content: space-between; }
+    .sheet-tag { display: flex; align-items: center; gap: 6px; color: #5a8150; font-size: 10px; font-weight: 600; }
+    .sheet-tag i { width: 7px; height: 7px; border-radius: 50%; background: #90b95c; }
+    .icon-button { display: grid; width: 32px; height: 32px; padding: 0; place-items: center; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--muted); cursor: pointer; }
+    .sheet-car-art { display: flex; height: 128px; margin: 16px 0 13px; align-items: center; justify-content: center; border-radius: 7px; background: #f2f4eb; color: var(--green); }
+    .sheet-car-art svg { width: 193px; height: 104px; }
+    .sheet-title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+    .sheet-title-row h2 { margin: 0 0 6px; font-size: 21px; font-weight: 700; }
+    .sheet-title-row p { margin: 0; color: var(--muted); font-size: 10px; }
+    .sheet-price { font-family: var(--mono); font-size: 19px; white-space: nowrap; }
+    .sheet-price small { color: var(--muted); font-family: var(--sans); font-size: 10px; }
+    .specs { display: grid; grid-template-columns: repeat(3, 1fr); margin: 17px 0; padding: 13px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .spec { display: grid; gap: 5px; text-align: center; }
+    .spec + .spec { border-left: 1px solid var(--line); }
+    .spec strong { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+    .spec span { color: var(--muted); font-size: 9px; }
+    .sheet-notice { margin: 0 0 15px; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .primary-button { display: flex; width: 100%; min-height: 47px; padding: 0 16px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 6px; background: var(--green); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; transition: background .18s, transform .18s; }
+    .primary-button:hover:not(:disabled) { transform: translateY(-1px); background: #194733; }
+    .secondary-button { display: flex; width: 100%; min-height: 42px; margin-top: 6px; align-items: center; justify-content: center; border: 0; background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; }
+    .overlay { position: fixed; z-index: 20; inset: 0; display: grid; padding: 20px; place-items: center; background: #10251c73; opacity: 0; pointer-events: none; transition: opacity .2s; }
+    .overlay.open { opacity: 1; pointer-events: auto; }
+    .dialog { position: relative; width: min(100%, 402px); padding: 28px; border: 1px solid #e8ebe4; border-radius: 9px; background: #fff; box-shadow: 0 20px 80px #10251c26; transform: translateY(9px); transition: transform .2s; }
+    .overlay.open .dialog { transform: translateY(0); }
+    .dialog-close { position: absolute; top: 16px; right: 16px; }
+    .dialog-kicker { margin: 0 0 9px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 1px; }
+    .dialog h2 { margin: 0 0 5px; font-size: 22px; }
+    .dialog-copy { margin: 0 0 20px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .timer { margin: 17px 0 7px; color: var(--green); font-family: var(--mono); font-size: 55px; line-height: 1; text-align: center; }
+    .reservation-car { margin: 0 0 21px; color: var(--muted); font-size: 11px; text-align: center; }
+    .reservation-note { margin: 15px 0 0; padding: 10px 11px; border-radius: 5px; background: #f5f7ef; color: #697366; font-size: 10px; line-height: 1.6; }
+    .trip-status { display: inline-flex; margin: 2px 0 17px; padding: 6px 9px; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font-size: 10px; }
+    .trip-status i { width: 7px; height: 7px; border-radius: 50%; background: #90b95c; }
+    .trip-cost { margin: 0 0 5px; font-family: var(--mono); font-size: 45px; font-weight: 500; }
+    .trip-detail { margin: 0 0 19px; color: var(--muted); font-size: 10px; }
+    .trip-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
+    .pause-button { display: flex; min-height: 47px; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .summary-icon { display: grid; width: 43px; height: 43px; margin-bottom: 14px; place-items: center; border-radius: 50%; background: #eaf2e7; color: var(--green); font-size: 19px; }
+    .summary-total { display: flex; margin: 19px 0 11px; padding: 14px 0; justify-content: space-between; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 11px; }
+    .summary-total strong { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+    .summary-extras { display: flex; margin-bottom: 22px; justify-content: space-between; color: var(--muted); font-size: 10px; }
+    .summary-extras strong { color: var(--green); font-weight: 600; }
+    .profile-page { position: fixed; z-index: 9; inset: 72px 0 0; display: none; overflow: auto; padding: 50px 24px; background: var(--canvas); }
+    .profile-page.open { display: block; animation: page-in .22s ease both; }
+    @keyframes page-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    .profile-content { width: min(100%, 560px); margin: 0 auto; }
+    .profile-content > .eyebrow { margin-bottom: 8px; }
+    .profile-content > h1 { margin: 0 0 24px; font-size: 25px; }
+    .profile-card { display: flex; padding: 21px; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+    .profile-avatar { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: var(--lime); font-size: 13px; font-weight: 700; }
+    .profile-card strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .profile-card p { margin: 0; color: var(--muted); font-size: 10px; }
+    .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 13px 0 21px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+    .profile-stat { padding: 15px 10px; text-align: center; }
+    .profile-stat + .profile-stat { border-left: 1px solid var(--line); }
+    .profile-stat strong { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: 17px; font-weight: 500; }
+    .profile-stat span { color: var(--muted); font-size: 9px; }
+    .profile-section-title { margin: 22px 0 9px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .9px; }
+    .profile-row { display: flex; min-height: 49px; padding: 0 13px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: #fff; font-size: 11px; }
+    .profile-row:first-of-type { border: 1px solid var(--line); border-radius: 5px 5px 0 0; }
+    .profile-row:last-of-type { border: 1px solid var(--line); border-top: 0; border-radius: 0 0 5px 5px; }
+    .profile-row span:last-child { color: var(--muted); }
+    .toast { position: fixed; z-index: 30; right: 20px; bottom: 22px; max-width: calc(100vw - 40px); padding: 11px 15px; border-radius: 5px; background: var(--ink); color: #fff; font-size: 11px; box-shadow: 0 4px 16px #10251c38; opacity: 0; transform: translateY(7px); transition: opacity .2s, transform .2s; pointer-events: none; }
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    .hidden { display: none !important; }
+    @media (min-width: 1100px) {
+      .workspace { grid-template-columns: minmax(0, 1fr) 384px; }
+      .map { min-height: calc(100vh - 72px); }
+    }
+    @media (max-width: 760px) {
+      body { overflow: hidden; }
+      .app { height: 100dvh; min-height: 0; overflow: hidden; }
+      .topbar { min-height: 60px; padding: 0 15px; gap: 11px; }
+      .brand { gap: 7px; }
+      .brand-mark { width: 31px; height: 31px; border-radius: 9px; font-size: 17px; }
+      .brand-name { font-size: 16px; }
+      .top-divider, .campus-copy small, .credits { display: none; }
+      .campus-button { gap: 6px; }
+      .campus-symbol { width: 29px; height: 29px; font-size: 13px; }
+      .campus-copy strong { max-width: 74px; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+      .search { width: auto; min-width: 0; min-height: 36px; margin-left: auto; padding: 0 10px; gap: 6px; border-radius: 5px; }
+      .search input { font-size: 10px; }
+      .search-key { display: none; }
+      .header-meta { gap: 0; }
+      .avatar { width: 31px; height: 31px; }
+      .workspace { position: relative; display: block; flex: 1; min-height: 0; }
+      .map { position: absolute; inset: 0; min-height: 0; }
+      .map-art { inset: -35px -120px; }
+      .map-label { top: 15px; left: 12px; padding: 8px 10px; }
+      .map-filter { top: 15px; right: 12px; }
+      .filter-button { padding: 7px 9px; font-size: 9px; }
+      .b-library { top: 21%; left: 32%; }
+      .b-science { top: 34%; left: 66%; }
+      .b-south { top: 72%; left: 42%; }
+      .b-student { top: 70%; left: 8%; }
+      .b-gym { top: 17%; left: 68%; }
+      .b-west { top: 44%; left: 8%; }
+      .green-one { left: 4%; }
+      .green-two { right: 1%; }
+      .caption-lake { left: 11%; }
+      .caption-lawn { right: 5%; }
+      .map-controls { right: 14px; bottom: 86px; }
+      .map-scale { bottom: 16px; left: 15px; }
+      .side-panel { display: none; }
+      .mobile-nav { position: absolute; z-index: 7; right: 0; bottom: 0; left: 0; display: grid; height: calc(62px + env(safe-area-inset-bottom)); padding: 7px 20px max(6px, env(safe-area-inset-bottom)); grid-template-columns: 1fr 1fr; border-top: 1px solid #e9ebe3; background: #fff; }
+      .nav-button { display: grid; padding: 0; place-items: center; align-content: center; gap: 4px; border: 0; background: transparent; color: var(--muted); font-size: 9px; cursor: pointer; }
+      .nav-button svg { width: 18px; height: 18px; }
+      .nav-button.active { color: var(--green); }
+      .vehicle-sheet { width: 100%; padding: 18px 19px max(15px, env(safe-area-inset-bottom)); }
+      .sheet-car-art { height: 102px; margin: 11px 0; }
+      .sheet-car-art svg { height: 88px; }
+      .profile-page { inset: 60px 0 0; padding: 31px 18px; }
+      .overlay { padding: 13px; }
+      .dialog { padding: 24px; }
+      .toast { right: 12px; bottom: calc(72px + env(safe-area-inset-bottom)); }
+    }
+    @media (max-width: 430px) {
+      .topbar { gap: 8px; padding-right: 10px; padding-left: 10px; }
+      .campus-copy { display: none; }
+      .search { flex: 1 1 54px; }
+      .brand-name { font-size: 14px; }
+      .brand { gap: 5px; }
+    }
+    @media (max-height: 620px) and (max-width: 760px) {
+      .sheet-car-art { height: 76px; }
+      .sheet-car-art svg { height: 67px; }
+      .vehicle-sheet { padding-top: 13px; }
+      .specs { margin: 11px 0; padding: 9px 0; }
+      .sheet-notice { margin-bottom: 9px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <button class="brand" id="home-button" type="button" aria-label="UniLoop map home" data-i18n-aria="brandHome">
+        <span class="brand-mark" aria-hidden="true">u</span>
+        <span class="brand-name">uni<span>loop</span></span>
+      </button>
+      <span class="top-divider" aria-hidden="true"></span>
+      <button class="campus-button" id="campus-button" type="button" aria-label="Campus options" data-i18n-aria="campusOptions">
+        <span class="campus-symbol" aria-hidden="true">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="m3 10 9-6 9 6v10H3V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 20v-7h8v7M2 10h20M12 4v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </span>
+        <span class="campus-copy"><strong data-i18n="campusName">Athens University of Economics and Business</strong><small data-i18n="campusSubtitle">Patission campus · Athens</small></span>
+      </button>
+      <label class="search" aria-label="Search the campus or vehicles" data-i18n-aria="searchLabel">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input id="search-input" type="search" placeholder="Search places or cars..." data-i18n-placeholder="searchPlaceholder" autocomplete="off">
+        <span class="search-key" aria-hidden="true">⌘ K</span>
+      </label>
+      <div class="header-meta">
+        <span class="credits"><span data-i18n="ridePoints">Ride points</span> <strong id="credit-count">120</strong></span>
+        <button class="avatar" id="profile-button" type="button" aria-label="Άνοιγμα προφίλ" data-i18n-aria="profileOpen">Α</button>
+      </div>
+    </header>
+
+    <main class="workspace" id="workspace">
+      <section class="map" id="map-view" aria-label="Athens campus vehicle map" data-i18n-aria="mapLabel">
+        <div class="map-art" aria-hidden="true">
+          <div class="green-space green-one"></div><div class="green-space green-two"></div>
+          <div class="road horizontal"></div><div class="road vertical"></div><div class="road diagonal"></div><div class="road side"></div>
+          <div class="path one"></div><div class="path two"></div>
+          <div class="building b-library"><span data-i18n="mapMainBuilding">Κεντρικό κτίριο</span><em>ΟΠΑ · ΠΑΤΗΣΙΩΝ</em></div>
+          <div class="building b-science"><span data-i18n="mapVictoria">Βικτώρια</span><em>ΣΤΑΘΜΟΣ ΜΕΤΡΟ</em></div>
+          <div class="building b-south"><span data-i18n="mapEvelpidon">Ευελπίδων</span><em>ΟΔΟΣ</em></div>
+          <div class="building b-student"><span data-i18n="mapMuseum">Εθνικό Μουσείο</span><em>ΑΡΧΑΙΟΛΟΓΙΑ</em></div>
+          <div class="building b-gym"><span data-i18n="mapPedion">Πεδίον του Άρεως</span><em>ΠΑΡΚΟ</em></div>
+          <div class="building b-west"><span data-i18n="mapAverof">Αβέρωφ</span><em>ΟΔΟΣ</em></div>
+          <span class="map-caption caption-lake" data-i18n="mapCaptionMuseum">National Archaeological Museum</span><span class="map-caption caption-lawn" data-i18n="mapCaptionSquare">Victoria Square</span>
+        </div>
+        <div class="map-label" aria-label="Illustrative map of the Patission campus" data-i18n-aria="mapPreview"><span style="color:#67894e">●</span> <span data-i18n="mapPreviewText">Map preview · Patission campus</span> <span id="map-count">06</span></div>
+        <div class="map-filter" role="group" aria-label="Filter vehicles" data-i18n-aria="filterLabel">
+          <button class="filter-button active" data-filter="all" type="button" data-i18n="filterAll">All cars</button>
+          <button class="filter-button" data-filter="electric" type="button" data-i18n="filterElectric">Electric</button>
+          <button class="filter-button" data-filter="available" type="button" data-i18n="filterAvailable">Available</button>
+        </div>
+        <div class="map-markers" id="map-markers" aria-label="Available vehicle locations" data-i18n-aria="markerLabel"></div>
+        <div class="location-dot" role="img" aria-label="Your location" data-i18n-aria="yourLocation"></div>
+        <div class="map-controls" aria-label="Map controls" data-i18n-aria="mapControls">
+          <button class="map-control" id="zoom-in" type="button" aria-label="Zoom in" data-i18n-aria="zoomIn">+</button>
+          <button class="map-control" id="zoom-out" type="button" aria-label="Zoom out" data-i18n-aria="zoomOut">−</button>
+          <button class="map-control" id="locate-button" type="button" aria-label="Centre on my location" data-i18n-aria="locate">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <span class="map-scale" id="map-scale">200 m</span>
+        <nav class="mobile-nav" aria-label="Main navigation" data-i18n-aria="navigation">
+          <button class="nav-button active" id="nav-map" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 3v15m6-12v15" stroke="currentColor" stroke-width="1.7"/></svg>
+            <span data-i18n="navFindCar">Αυτοκίνητα</span>
+          </button>
+          <button class="nav-button" id="nav-profile" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            <span data-i18n="navProfile">Προφίλ</span>
+          </button>
+        </nav>
+      </section>
+
+      <aside class="side-panel" aria-label="Nearby vehicles" data-i18n-aria="nearbyLabel">
+        <div class="panel-heading">
+          <div><p class="eyebrow" data-i18n="nearbyEyebrow">NEARBY VEHICLES</p><h1 data-i18n="nearbyTitle">Cars nearby</h1></div>
+          <span class="available"><i></i><span id="list-count">6</span> <span data-i18n="carsAvailable">available</span></span>
+        </div>
+        <div class="vehicle-list" id="vehicle-list"></div>
+        <footer class="side-foot"><span data-i18n="pricingLabel">Demo pricing</span><strong data-i18n="pricingDisclosure">Illustrative rates · no live billing</strong></footer>
+      </aside>
+    </main>
+  </div>
+
+  <section class="profile-page" id="profile-page" aria-label="Your profile" data-i18n-aria="profileLabel">
+    <div class="profile-content">
+      <p class="eyebrow" data-i18n="accountEyebrow">YOUR ACCOUNT</p><h1 data-i18n="accountTitle">Your account</h1>
+      <div class="profile-card"><div class="profile-avatar">Α</div><div><strong data-i18n="profileName">Αλέξης</strong><p data-i18n="profileSubtitle">Αθήνα · δοκιμαστικός λογαριασμός UniLoop</p></div></div>
+      <div class="profile-stats">
+        <div class="profile-stat"><strong id="profile-trips">0</strong><span data-i18n="statTrips">Trips</span></div>
+        <div class="profile-stat"><strong id="profile-distance">0 km</strong><span data-i18n="statDistance">Distance</span></div>
+        <div class="profile-stat"><strong id="profile-stars">120</strong><span data-i18n="statPoints">Ride points</span></div>
+      </div>
+      <p class="profile-section-title" data-i18n="accountServices">ACCOUNT &amp; SERVICE</p>
+      <div class="profile-row"><span data-i18n="identityLabel">Student verification</span><span data-i18n="identityValue">Demo only · not connected</span></div>
+      <div class="profile-row"><span data-i18n="billingLabel">Billing</span><span data-i18n="billingValue">Illustrative rates</span></div>
+      <div class="profile-row"><span data-i18n="supportLabel">Local requirements</span><span data-i18n="supportValue">No real vehicle or payment service</span></div>
+      <p class="profile-section-title" data-i18n="recentTrips">RECENT TRIPS</p>
+      <div id="history-list" class="profile-history"><p class="empty-state" data-i18n="emptyHistory">No trips yet.</p></div>
+    </div>
+  </section>
+
+  <div class="scrim" id="scrim"></div>
+  <section class="vehicle-sheet" id="vehicle-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-handle"></div>
+    <div class="sheet-top"><span class="sheet-tag"><i></i><span data-i18n="vehicleAvailable">Available now</span></span><button class="icon-button" id="close-sheet" type="button" aria-label="Close vehicle details" data-i18n-aria="closeVehicle">✕</button></div>
+    <div class="sheet-car-art" aria-hidden="true">
+      <svg viewBox="0 0 240 120" fill="none"><path d="M30 78c3-10 11-16 21-19l22-7 18-21c4-5 9-7 17-7h50c8 0 14 4 19 11l15 22 17 7c7 3 11 8 13 16v13H29l1-15Z" fill="#dce7d4" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="m82 50 16-19c2-3 6-4 10-4h21v23H82Zm53-23h22c5 0 10 3 13 8l11 15h-46V27Z" fill="#f7f8f2" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M31 70h40m112 0h22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="67" cy="88" r="12" fill="#314438" stroke="#fff" stroke-width="3"/><circle cx="187" cy="88" r="12" fill="#314438" stroke="#fff" stroke-width="3"/><path d="M96 68h21m-10-10v20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M100 58h13" stroke="#a4be5c" stroke-width="3" stroke-linecap="round"/></svg>
+    </div>
+    <div class="sheet-title-row"><div><h2 id="sheet-title">Volkswagen e-up!</h2><p id="sheet-subtitle">Ηλεκτρικό · αυτόματο · 4 θέσεις</p></div><div class="sheet-price"><span id="sheet-price">0,19&nbsp;€</span><small> / <span data-i18n="minute">λεπτό</span></small></div></div>
+    <div class="specs"><div class="spec"><strong id="sheet-battery">85%</strong><span data-i18n="batteryLabel">Μπαταρία</span></div><div class="spec"><strong id="sheet-distance">300 μ.</strong><span data-i18n="walkDistance">Απόσταση με τα πόδια</span></div><div class="spec"><strong id="sheet-range">92 χλμ.</strong><span data-i18n="rangeLabel">Εκτιμώμενη αυτονομία</span></div></div>
+    <p class="sheet-notice" data-i18n="reservationNotice">Reserve for up to 10 minutes. Your demo trip starts when you unlock the car.</p>
+    <button class="primary-button" id="reserve-button" type="button"><span data-i18n="reserveVehicle">Reserve car</span><span aria-hidden="true">→</span></button>
+    <button class="secondary-button" id="cancel-sheet" type="button" data-i18n="browseCars">Browse other cars</button>
+  </section>
+
+  <div class="overlay" id="reservation-overlay">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="reservation-title">
+      <button class="icon-button dialog-close" type="button" data-close="reservation" aria-label="Close reservation" data-i18n-aria="closeReservation">✕</button>
+      <p class="dialog-kicker">Η ΚΡΑΤΗΣΗ ΕΠΙΒΕΒΑΙΩΘΗΚΕ</p><h2 id="reservation-title" data-i18n="reservationTitle">Το αυτοκίνητο κρατήθηκε για εσάς</h2>
+      <p class="dialog-copy" data-i18n="reservationDescription">Head to the car and start your trip within 10 minutes.</p>
+      <div class="timer" id="res-timer">10:00</div><p class="reservation-car" id="reservation-car">Volkswagen e-up! · Είσοδος Πατησίων ΟΠΑ</p>
+      <button class="primary-button" id="start-trip" type="button"><span data-i18n="unlockCar">Unlock and start trip</span><span aria-hidden="true">→</span></button>
+      <button class="secondary-button" id="cancel-reservation" type="button" data-i18n="cancelReservation">Cancel reservation</button>
+      <p class="reservation-note" data-i18n="prototypeNotice">Prototype only. This will not unlock a real vehicle.</p>
+    </section>
+  </div>
+
+  <div class="overlay" id="trip-overlay">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="trip-title">
+      <p class="dialog-kicker" data-i18n="tripKicker">Η ΔΙΑΔΡΟΜΗ ΣΑΣ</p><h2 id="trip-title" data-i18n="tripTitle">Η διαδρομή βρίσκεται σε εξέλιξη</h2>
+      <span class="trip-status" id="trip-status"><i></i><span data-i18n="tripStatus">Το αυτοκίνητο ξεκλειδώθηκε · Οδηγείτε με ασφάλεια</span></span>
+      <p class="dialog-copy" id="trip-car-name" style="margin-bottom:5px">VW e-Up!</p>
+      <div class="trip-cost" id="trip-cost">0,00&nbsp;€</div><p class="trip-detail"><span data-i18n="tripDuration">Διάρκεια</span> <span id="trip-duration">00:00</span> · <span id="trip-rate">0,19&nbsp;€</span> / <span data-i18n="minute">λεπτό</span></p>
+      <div class="trip-actions"><button class="pause-button" id="pause-trip" type="button">Ⅱ <span data-i18n="pauseBilling">Pause billing</span></button><button class="primary-button" id="end-trip" type="button" data-i18n="endTrip">End trip</button></div>
+      <p class="reservation-note" data-i18n="parkingNotice">Return the car to an approved UniLoop parking area. No real vehicle is connected.</p>
+    </section>
+  </div>
+
+  <div class="overlay" id="summary-overlay">
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="summary-title">
+      <div class="summary-icon" aria-hidden="true">✓</div><p class="dialog-kicker">Η ΔΙΑΔΡΟΜΗ ΟΛΟΚΛΗΡΩΘΗΚΕ</p>
+      <h2 id="summary-title" data-i18n="summaryTitle">Η διαδρομή ολοκληρώθηκε</h2><p class="dialog-copy" data-i18n="summaryDescription">Η δοκιμαστική διαδρομή ολοκληρώθηκε. Δεν έγινε καμία χρέωση.</p>
+      <div class="summary-total"><span data-i18n="tripFare">Κόστος διαδρομής</span><strong id="summary-cost">0,00&nbsp;€</strong></div>
+      <div class="summary-extras"><span><span data-i18n="tripDuration">Διάρκεια</span> <strong id="summary-duration">00:00</strong></span><span><strong>+10</strong> <span data-i18n="pointsEarned">πόντοι</span></span></div>
+      <button class="primary-button" id="back-to-map" type="button"><span data-i18n="backToMap">Back to map</span><span aria-hidden="true">→</span></button>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const vehicles = [
+      { id: "up", name: "Volkswagen e-up!", type: { en: "Electric · automatic · 4 seats", el: "Ηλεκτρικό · αυτόματο · 4 θέσεις" }, battery: 85, distance: 300, range: 92, price: 0.19, x: 45, y: 40, place: { en: "AUEB Patission entrance", el: "Είσοδος Πατησίων ΟΠΑ" }, electric: true },
+      { id: "fiat", name: "Fiat 500e", type: { en: "Electric · automatic · 4 seats", el: "Ηλεκτρικό · αυτόματο · 4 θέσεις" }, battery: 72, distance: 450, range: 145, price: 0.22, x: 70, y: 59, place: { en: "Victoria metro station", el: "Σταθμός μετρό Βικτώρια" }, electric: true },
+      { id: "zoe", name: "Renault Zoe", type: { en: "Electric · automatic · 5 seats", el: "Ηλεκτρικό · αυτόματο · 5 θέσεις" }, battery: 91, distance: 520, range: 176, price: 0.26, x: 25, y: 63, place: { en: "Pedion tou Areos Park", el: "Πεδίον του Άρεως" }, electric: true },
+      { id: "peugeot", name: "Peugeot e-208", type: { en: "Electric · automatic · 5 seats", el: "Ηλεκτρικό · αυτόματο · 5 θέσεις" }, battery: 64, distance: 680, range: 124, price: 0.21, x: 72, y: 34, place: { en: "Evelpidon Street", el: "Οδός Ευελπίδων" }, electric: true },
+      { id: "panda", name: "Fiat Panda Hybrid", type: { en: "Hybrid · manual · 5 seats", el: "Υβριδικό · χειροκίνητο · 5 θέσεις" }, battery: 100, distance: 390, range: 340, price: 0.18, x: 37, y: 79, place: { en: "Averof Street", el: "Οδός Αβέρωφ" }, electric: false },
+      { id: "smart", name: "smart EQ fortwo", type: { en: "Electric · automatic · 2 seats", el: "Ηλεκτρικό · αυτόματο · 2 θέσεις" }, battery: 58, distance: 760, range: 80, price: 0.16, x: 85, y: 73, place: { en: "Mavromateon Street", el: "Οδός Μαυρομματαίων" }, electric: true }
+    ];
+    const messages = {
+      en: {
+        pageTitle: "UniLoop · Campus Car Sharing in Athens", brandHome: "UniLoop map home", campusOptions: "Campus options", campusName: "Athens University of Economics and Business", campusSubtitle: "Patission campus · Athens",
+        searchLabel: "Search the campus or vehicles", searchPlaceholder: "Search places or cars...", languageLabel: "Language", ridePoints: "Ride points", profileOpen: "Open profile",
+        mapLabel: "Athens campus vehicle map", mapMainBuilding: "Main building", mapVictoria: "Victoria", mapEvelpidon: "Evelpidon", mapMuseum: "National Museum", mapPedion: "Pedion tou Areos", mapAverof: "Averof",
+        mapCaptionMuseum: "National Archaeological Museum", mapCaptionSquare: "Victoria Square", mapPreview: "Illustrative map of the Patission campus", mapPreviewText: "Map preview · Patission campus", filterLabel: "Filter vehicles", filterAll: "All cars", filterElectric: "Electric", filterAvailable: "Available", markerLabel: "Available vehicle locations", yourLocation: "Your location", mapControls: "Map controls", zoomIn: "Zoom in", zoomOut: "Zoom out", locate: "Centre on my location", navigation: "Main navigation", navFindCar: "Find a car", navProfile: "Profile",
+        nearbyLabel: "Nearby vehicles", nearbyEyebrow: "NEARBY VEHICLES", nearbyTitle: "Cars nearby", carsAvailable: "available", pricingLabel: "Demo pricing", pricingDisclosure: "Illustrative rates · no live billing",
+        accountEyebrow: "YOUR ACCOUNT", accountTitle: "Your account", profileLabel: "Your profile", profileName: "Alex", profileSubtitle: "Athens · UniLoop demo account", statTrips: "Trips", statDistance: "Distance", statPoints: "Ride points", accountServices: "ACCOUNT & SERVICE", identityLabel: "Student verification", identityValue: "Demo only · not connected", billingLabel: "Billing", billingValue: "Illustrative rates", supportLabel: "Local requirements", supportValue: "No real vehicle or payment service", recentTrips: "RECENT TRIPS", emptyHistory: "No trips yet.",
+        vehicleAvailable: "Available now", closeVehicle: "Close vehicle details", minute: "min", batteryLabel: "Battery", walkDistance: "Walk away", rangeLabel: "Est. range", reservationNotice: "Reserve for up to 10 minutes. Your demo trip starts when you unlock the car.", reserveVehicle: "Reserve car", browseCars: "Browse other cars", closeReservation: "Close reservation", reservationTitle: "Car reserved for you", reservationDescription: "Head to the car and start your trip within 10 minutes.", unlockCar: "Unlock and start trip", cancelReservation: "Cancel reservation", prototypeNotice: "Prototype only. This will not unlock a real vehicle.", batteryTooLow: "Battery too low to reserve",
+        tripKicker: "YOUR TRIP", tripTitle: "Trip in progress", tripStatus: "Car unlocked · Drive safely", tripDuration: "Duration", pauseBilling: "Pause billing", resumeTrip: "Resume trip", endTrip: "End trip", tripPaused: "Billing paused", parkingNotice: "Return the car to an approved UniLoop parking area. No real vehicle is connected.",
+        summaryTitle: "Trip complete", summaryDescription: "Your demo trip has ended. No payment has been processed.", tripFare: "Trip fare", pointsEarned: "points", backToMap: "Back to map", emptyResults: "No cars match your search. Try another place or filter.", campusToast: "Only the Athens campus is shown in this demo.", locationToast: "Map centred on your location.",
+        reservationExpired: "Reservation expired. The car is available again.", reservationCancelled: "Reservation cancelled. The car is available again.", tripAria: "{name}, {price} per minute, {distance} away", viewCarAria: "View {name} details", batteryAndWalk: "battery · {distance} walk", zoomToast: "Map zoom: {distance}"
+      },
+      el: {
+        pageTitle: "UniLoop · Κοινόχρηστα αυτοκίνητα στην Αθήνα", brandHome: "Αρχική χάρτη UniLoop", campusOptions: "Επιλογές πανεπιστημιούπολης", campusName: "Οικονομικό Πανεπιστήμιο Αθηνών", campusSubtitle: "Πανεπιστημιούπολη Πατησίων · Αθήνα",
+        searchLabel: "Αναζήτηση χώρων ή οχημάτων", searchPlaceholder: "Αναζήτηση χώρου ή αυτοκινήτου...", languageLabel: "Γλώσσα", ridePoints: "Πόντοι διαδρομών", profileOpen: "Άνοιγμα προφίλ",
+        mapLabel: "Χάρτης οχημάτων στην Αθήνα", mapMainBuilding: "Κεντρικό κτίριο", mapVictoria: "Βικτώρια", mapEvelpidon: "Ευελπίδων", mapMuseum: "Εθνικό Μουσείο", mapPedion: "Πεδίον του Άρεως", mapAverof: "Αβέρωφ",
+        mapCaptionMuseum: "Εθνικό Αρχαιολογικό Μουσείο", mapCaptionSquare: "Πλατεία Βικτωρίας", mapPreview: "Ενδεικτικός χάρτης της πανεπιστημιούπολης Πατησίων", mapPreviewText: "Χάρτης · Πανεπιστημιούπολη Πατησίων", filterLabel: "Φίλτρα οχημάτων", filterAll: "Όλα", filterElectric: "Ηλεκτρικά", filterAvailable: "Διαθέσιμα", markerLabel: "Θέσεις διαθέσιμων οχημάτων", yourLocation: "Η τοποθεσία σας", mapControls: "Χειριστήρια χάρτη", zoomIn: "Μεγέθυνση χάρτη", zoomOut: "Σμίκρυνση χάρτη", locate: "Κεντράρισμα στην τοποθεσία μου", navigation: "Κύρια πλοήγηση", navFindCar: "Αυτοκίνητα", navProfile: "Προφίλ",
+        nearbyLabel: "Κοντινά οχήματα", nearbyEyebrow: "ΚΟΝΤΙΝΑ ΟΧΗΜΑΤΑ", nearbyTitle: "Οχήματα κοντά σας", carsAvailable: "διαθέσιμα", pricingLabel: "Τιμές επίδειξης", pricingDisclosure: "Ενδεικτικές τιμές · χωρίς χρέωση",
+        accountEyebrow: "Ο ΛΟΓΑΡΙΑΣΜΟΣ ΣΑΣ", accountTitle: "Ο λογαριασμός σας", profileLabel: "Το προφίλ σας", profileName: "Αλέξης", profileSubtitle: "Αθήνα · δοκιμαστικός λογαριασμός UniLoop", statTrips: "Διαδρομές", statDistance: "Απόσταση", statPoints: "Πόντοι διαδρομών", accountServices: "ΛΟΓΑΡΙΑΣΜΟΣ & ΥΠΗΡΕΣΙΕΣ", identityLabel: "Φοιτητική ταυτοποίηση", identityValue: "Μόνο επίδειξη · χωρίς σύνδεση", billingLabel: "Χρέωση", billingValue: "Ενδεικτικές τιμές", supportLabel: "Τοπικές υπηρεσίες", supportValue: "Δεν συνδέεται όχημα ή πληρωμή", recentTrips: "ΠΡΟΣΦΑΤΕΣ ΔΙΑΔΡΟΜΕΣ", emptyHistory: "Δεν υπάρχουν διαδρομές ακόμη.",
+        vehicleAvailable: "Διαθέσιμο τώρα", closeVehicle: "Κλείσιμο λεπτομερειών οχήματος", minute: "λεπτό", batteryLabel: "Μπαταρία", walkDistance: "Απόσταση με τα πόδια", rangeLabel: "Εκτιμώμενη αυτονομία", reservationNotice: "Κράτηση έως 10 λεπτά. Η δοκιμαστική διαδρομή ξεκινά με το ξεκλείδωμα.", reserveVehicle: "Κράτηση αυτοκινήτου", browseCars: "Δείτε άλλα αυτοκίνητα", closeReservation: "Κλείσιμο κράτησης", reservationTitle: "Το αυτοκίνητο κρατήθηκε για εσάς", reservationDescription: "Πηγαίνετε στο αυτοκίνητο και ξεκινήστε εντός 10 λεπτών.", unlockCar: "Ξεκλείδωμα και έναρξη", cancelReservation: "Ακύρωση κράτησης", prototypeNotice: "Μόνο για επίδειξη. Δεν ξεκλειδώνει πραγματικό όχημα.", batteryTooLow: "Ανεπαρκής μπαταρία για κράτηση",
+        tripKicker: "Η ΔΙΑΔΡΟΜΗ ΣΑΣ", tripTitle: "Η διαδρομή βρίσκεται σε εξέλιξη", tripStatus: "Το αυτοκίνητο ξεκλειδώθηκε · Οδηγείτε με ασφάλεια", tripDuration: "Διάρκεια", pauseBilling: "Παύση χρέωσης", resumeTrip: "Συνέχεια διαδρομής", endTrip: "Τέλος διαδρομής", tripPaused: "Η χρέωση έχει διακοπεί", parkingNotice: "Επιστρέψτε το αυτοκίνητο σε εγκεκριμένο χώρο στάθμευσης UniLoop. Δεν είναι συνδεδεμένο πραγματικό όχημα.",
+        summaryTitle: "Η διαδρομή ολοκληρώθηκε", summaryDescription: "Η δοκιμαστική διαδρομή ολοκληρώθηκε. Δεν έγινε καμία χρέωση.", tripFare: "Κόστος διαδρομής", pointsEarned: "πόντοι", backToMap: "Επιστροφή στον χάρτη", emptyResults: "Δεν βρέθηκαν αυτοκίνητα. Δοκιμάστε άλλη τοποθεσία ή φίλτρο.", campusToast: "Αυτή η επίδειξη περιλαμβάνει μόνο την πανεπιστημιούπολη της Αθήνας.", locationToast: "Ο χάρτης κεντραρίστηκε στην τοποθεσία σας.",
+        reservationExpired: "Η κράτηση έληξε. Το αυτοκίνητο είναι ξανά διαθέσιμο.", reservationCancelled: "Η κράτηση ακυρώθηκε. Το αυτοκίνητο είναι ξανά διαθέσιμο.", tripAria: "{name}, {price} ανά λεπτό, σε απόσταση {distance}", viewCarAria: "Προβολή λεπτομερειών για {name}", batteryAndWalk: "μπαταρία · {distance} με τα πόδια", zoomToast: "Μεγέθυνση χάρτη: {distance}"
+      }
+    };
+    const carIcon = '<svg viewBox="0 0 64 42" fill="none" aria-hidden="true"><path d="M7 25c1-5 4-8 9-9l7-2 7-8c1-2 3-3 6-3h12c3 0 5 1 7 4l5 8 3 2c2 1 3 3 3 6v7H6l1-5Z" fill="#e5eddb" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m25 14 7-8h8v9H25Zm17-8h6c2 0 3 1 4 3l4 6H42V6Z" fill="#f8f9f4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="17" cy="30" r="5" fill="#304137" stroke="#fff" stroke-width="1.5"/><circle cx="51" cy="30" r="5" fill="#304137" stroke="#fff" stroke-width="1.5"/></svg>';
+    const mapMarkers = document.getElementById("map-markers");
+    const vehicleList = document.getElementById("vehicle-list");
+    const sheet = document.getElementById("vehicle-sheet");
+    const scrim = document.getElementById("scrim");
+    const overlays = {
+      reservation: document.getElementById("reservation-overlay"),
+      trip: document.getElementById("trip-overlay"),
+      summary: document.getElementById("summary-overlay")
+    };
+    let activeVehicle = vehicles[0];
+    let activeFilter = "all";
+    let searchQuery = "";
+    let reservationSeconds = 600;
+    let reservationInterval = null;
+    let tripInterval = null;
+    let tripStartedAt = 0;
+    let pausedAt = 0;
+    let pausedDuration = 0;
+    let isPaused = false;
+    let totalTrips = 0;
+    let totalDistance = 0;
+    let toastTimeout = null;
+    const language = "el";
+    const rideHistory = [];
+    const currencyFormatters = {
+      el: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" })
+    };
+
+    function t(key, values = {}) {
+      let text = messages.el[key] || key;
+      Object.entries(values).forEach(([name, value]) => {
+        text = text.replaceAll(`{${name}}`, value);
+      });
+      return text;
+    }
+
+    function applyGreekTranslations() {
+      document.documentElement.lang = "el";
+      document.title = t("pageTitle");
+      document.querySelectorAll("[data-i18n]").forEach((element) => {
+        element.textContent = t(element.dataset.i18n);
+      });
+      document.querySelectorAll("[data-i18n-aria]").forEach((element) => {
+        element.setAttribute("aria-label", t(element.dataset.i18nAria));
+      });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+        element.setAttribute("placeholder", t(element.dataset.i18nPlaceholder));
+      });
+    }
+
+    function formatCurrency(amount) {
+      return currencyFormatters[language].format(amount);
+    }
+
+    function formatNumber(value, maximumFractionDigits = 0) {
+      return new Intl.NumberFormat("el-GR", { maximumFractionDigits }).format(value);
+    }
+
+    function formatDistance(meters) {
+      if (meters < 1000) return `${formatNumber(meters)} μ.`;
+      return `${formatNumber(meters / 1000, 1)} χλμ.`;
+    }
+
+    function filteredVehicles() {
+      return vehicles.filter((vehicle) => {
+        const matchesFilter = activeFilter !== "electric" || vehicle.electric;
+        const matchesAvailability = activeFilter !== "available" || vehicle.battery >= 20;
+        const searchable = `${vehicle.name} ${vehicle.type.el} ${vehicle.place.el}`.toLowerCase();
+        return matchesFilter && matchesAvailability && searchable.includes(searchQuery.toLowerCase());
+      });
+    }
+
+    function renderVehicles() {
+      const visibleVehicles = filteredVehicles();
+      mapMarkers.innerHTML = "";
+      vehicleList.innerHTML = "";
+      document.getElementById("map-count").textContent = `${String(visibleVehicles.length).padStart(2, "0")} οχήματα`;
+      document.getElementById("list-count").textContent = visibleVehicles.length;
+      if (visibleVehicles.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty-state";
+        empty.textContent = t("emptyResults");
+        vehicleList.append(empty);
+      }
+      visibleVehicles.forEach((vehicle) => {
+        const marker = document.createElement("button");
+        marker.type = "button";
+        marker.className = `map-marker${activeVehicle.id === vehicle.id && sheet.classList.contains("open") ? " selected" : ""}`;
+        marker.style.left = `${vehicle.x}%`;
+        marker.style.top = `${vehicle.y}%`;
+        marker.setAttribute("aria-label", t("tripAria", { name: vehicle.name, price: formatCurrency(vehicle.price), distance: formatDistance(vehicle.distance) }));
+        marker.innerHTML = `<span class="marker-icon">${carIcon}</span><span class="marker-price">${formatCurrency(vehicle.price)}<small>/λεπτό</small></span>`;
+        marker.addEventListener("click", () => openVehicle(vehicle.id));
+        mapMarkers.append(marker);
+
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "vehicle-card";
+        card.setAttribute("aria-label", t("viewCarAria", { name: vehicle.name }));
+        card.innerHTML = `<span class="car-thumb">${carIcon}</span><span class="car-info"><strong>${vehicle.name}</strong><span><b>● ${vehicle.battery}%</b> ${t("batteryAndWalk", { distance: formatDistance(vehicle.distance) })}</span><span>${vehicle.place.el}</span></span><span class="car-price">${formatCurrency(vehicle.price)}<small>/λεπτό</small></span>`;
+        card.addEventListener("click", () => openVehicle(vehicle.id));
+        vehicleList.append(card);
+      });
+    }
+
+    function openVehicle(vehicleId) {
+      const vehicle = vehicles.find((item) => item.id === vehicleId);
+      if (!vehicle) return;
+      activeVehicle = vehicle;
+      document.getElementById("sheet-title").textContent = vehicle.name;
+      document.getElementById("sheet-subtitle").textContent = vehicle.type.el;
+      document.getElementById("sheet-price").textContent = formatCurrency(vehicle.price);
+      document.getElementById("sheet-battery").textContent = `${vehicle.battery}%`;
+      document.getElementById("sheet-distance").textContent = formatDistance(vehicle.distance);
+      document.getElementById("sheet-range").textContent = `${formatNumber(vehicle.range)} χλμ.`;
+      document.getElementById("reservation-car").textContent = `${vehicle.name} · ${vehicle.place.el}`;
+      document.getElementById("reserve-button").disabled = vehicle.battery < 20;
+      document.getElementById("reserve-button").textContent = vehicle.battery < 20 ? t("batteryTooLow") : `${t("reserveVehicle")} →`;
+      sheet.classList.add("open");
+      scrim.classList.add("visible");
+      renderVehicles();
+    }
+
+    function closeSheet() {
+      sheet.classList.remove("open");
+      scrim.classList.remove("visible");
+      renderVehicles();
+    }
+
+    function showOverlay(name) {
+      Object.values(overlays).forEach((overlay) => overlay.classList.remove("open"));
+      overlays[name].classList.add("open");
+    }
+
+    function hideOverlays() {
+      Object.values(overlays).forEach((overlay) => overlay.classList.remove("open"));
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      window.clearTimeout(toastTimeout);
+      toastTimeout = window.setTimeout(() => toast.classList.remove("visible"), 2400);
+    }
+
+    function formatTime(totalSeconds) {
+      const seconds = Math.max(0, Math.floor(totalSeconds));
+      const minutes = Math.floor(seconds / 60);
+      return `${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+    }
+
+    function startReservation() {
+      closeSheet();
+      reservationSeconds = 600;
+      document.getElementById("res-timer").textContent = formatTime(reservationSeconds);
+      showOverlay("reservation");
+      window.clearInterval(reservationInterval);
+      reservationInterval = window.setInterval(() => {
+        reservationSeconds -= 1;
+        document.getElementById("res-timer").textContent = formatTime(reservationSeconds);
+        if (reservationSeconds <= 0) cancelReservation(true);
+      }, 1000);
+    }
+
+    function cancelReservation(expired = false) {
+      window.clearInterval(reservationInterval);
+      reservationInterval = null;
+      hideOverlays();
+      if (expired) showToast(t("reservationExpired"));
+      else showToast(t("reservationCancelled"));
+    }
+
+    function startTrip() {
+      window.clearInterval(reservationInterval);
+      reservationInterval = null;
+      tripStartedAt = Date.now();
+      pausedDuration = 0;
+      pausedAt = 0;
+      isPaused = false;
+      document.getElementById("trip-car-name").textContent = activeVehicle.name;
+      document.getElementById("trip-rate").textContent = formatCurrency(activeVehicle.price);
+      document.getElementById("trip-status").innerHTML = `<i></i>${t("tripStatus")}`;
+      document.getElementById("pause-trip").innerHTML = `Ⅱ <span>${t("pauseBilling")}</span>`;
+      showOverlay("trip");
+      updateTripUI();
+      window.clearInterval(tripInterval);
+      tripInterval = window.setInterval(updateTripUI, 1000);
+    }
+
+    function tripElapsedSeconds() {
+      const end = isPaused ? pausedAt : Date.now();
+      return Math.max(0, Math.floor((end - tripStartedAt - pausedDuration) / 1000));
+    }
+
+    function updateTripUI() {
+      const elapsed = tripElapsedSeconds();
+      const cost = elapsed / 60 * activeVehicle.price;
+      document.getElementById("trip-cost").textContent = formatCurrency(cost);
+      document.getElementById("trip-duration").textContent = formatTime(elapsed);
+    }
+
+    function togglePause() {
+      const pauseButton = document.getElementById("pause-trip");
+      const status = document.getElementById("trip-status");
+      if (isPaused) {
+        pausedDuration += Date.now() - pausedAt;
+        pausedAt = 0;
+        isPaused = false;
+        pauseButton.innerHTML = `Ⅱ <span>${t("pauseBilling")}</span>`;
+        status.innerHTML = `<i></i>${t("tripStatus")}`;
+      } else {
+        pausedAt = Date.now();
+        isPaused = true;
+        pauseButton.innerHTML = `▶ <span>${t("resumeTrip")}</span>`;
+        status.innerHTML = `<i style="background:#d8aa54"></i>${t("tripPaused")}`;
+      }
+      updateTripUI();
+    }
+
+    function endTrip() {
+      updateTripUI();
+      const elapsed = tripElapsedSeconds();
+      const cost = (elapsed / 60 * activeVehicle.price).toFixed(2);
+      window.clearInterval(tripInterval);
+      tripInterval = null;
+      totalTrips += 1;
+      totalDistance += Math.max(.4, Math.round(elapsed / 90 * 10) / 10);
+      document.getElementById("summary-cost").textContent = formatCurrency(Number(cost));
+      document.getElementById("summary-duration").textContent = formatTime(elapsed);
+      document.getElementById("credit-count").textContent = Number(document.getElementById("credit-count").textContent) + 10;
+      document.getElementById("profile-trips").textContent = totalTrips;
+      document.getElementById("profile-distance").textContent = `${formatNumber(totalDistance, 1)} χλμ.`;
+      document.getElementById("profile-stars").textContent = document.getElementById("credit-count").textContent;
+      const historyItem = document.createElement("div");
+      historyItem.className = "profile-row";
+      const date = new Intl.DateTimeFormat("el-GR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date());
+      const detail = document.createElement("span");
+      detail.textContent = `${activeVehicle.name} · ${date}`;
+      const fare = document.createElement("span");
+      fare.textContent = formatCurrency(Number(cost));
+      historyItem.append(detail, fare);
+      const historyList = document.getElementById("history-list");
+      historyList.prepend(historyItem);
+      hideOverlays();
+      showOverlay("summary");
+    }
+
+    function openProfile() {
+      closeSheet();
+      document.getElementById("profile-page").classList.add("open");
+      document.getElementById("nav-map").classList.remove("active");
+      document.getElementById("nav-profile").classList.add("active");
+    }
+
+    function showMap() {
+      document.getElementById("profile-page").classList.remove("open");
+      document.getElementById("nav-profile").classList.remove("active");
+      document.getElementById("nav-map").classList.add("active");
+    }
+
+    document.getElementById("reserve-button").addEventListener("click", startReservation);
+    document.getElementById("close-sheet").addEventListener("click", closeSheet);
+    document.getElementById("cancel-sheet").addEventListener("click", closeSheet);
+    scrim.addEventListener("click", closeSheet);
+    document.getElementById("start-trip").addEventListener("click", startTrip);
+    document.getElementById("cancel-reservation").addEventListener("click", () => cancelReservation());
+    document.getElementById("pause-trip").addEventListener("click", togglePause);
+    document.getElementById("end-trip").addEventListener("click", endTrip);
+    document.getElementById("back-to-map").addEventListener("click", () => { hideOverlays(); showMap(); });
+    document.querySelectorAll("[data-close=reservation]").forEach((button) => button.addEventListener("click", () => cancelReservation()));
+    document.getElementById("profile-button").addEventListener("click", openProfile);
+    document.getElementById("nav-profile").addEventListener("click", openProfile);
+    document.getElementById("nav-map").addEventListener("click", showMap);
+    document.getElementById("home-button").addEventListener("click", showMap);
+    document.getElementById("campus-button").addEventListener("click", () => showToast(t("campusToast")));
+    document.getElementById("locate-button").addEventListener("click", () => showToast(t("locationToast")));
+    document.getElementById("zoom-in").addEventListener("click", () => showToast(t("zoomIn")));
+    document.getElementById("zoom-out").addEventListener("click", () => showToast(t("zoomOut")));
+    document.getElementById("search-input").addEventListener("input", (event) => {
+      searchQuery = event.target.value.trim();
+      showMap();
+      applyGreekTranslations();
+      renderVehicles();
+    });
+    document.querySelectorAll(".filter-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeFilter = button.dataset.filter;
+        document.querySelectorAll(".filter-button").forEach((filterButton) => filterButton.classList.toggle("active", filterButton === button));
+        renderVehicles();
+      });
+    });
+    document.addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        document.getElementById("search-input").focus();
+      }
+      if (event.key === "Escape") {
+        if (overlays.reservation.classList.contains("open")) cancelReservation();
+        else if (sheet.classList.contains("open")) closeSheet();
+        else if (document.getElementById("profile-page").classList.contains("open")) showMap();
+      }
+    });
+    renderVehicles();
+  </script>
+</body>
+</html>
