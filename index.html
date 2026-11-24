@@ -162,13 +162,36 @@
     .trip-status i { width: 7px; height: 7px; border-radius: 50%; background: #90b95c; }
     .trip-cost { margin: 0 0 5px; font-family: var(--mono); font-size: 45px; font-weight: 500; }
     .trip-detail { margin: 0 0 19px; color: var(--muted); font-size: 10px; }
+    .trip-parking-countdown { display: flex; margin: -11px 0 17px; justify-content: space-between; color: var(--muted); font-size: 11px; }
+    .trip-parking-countdown strong { color: var(--green); font-family: var(--mono); font-weight: 500; }
     .trip-actions { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; }
     .pause-button { display: flex; min-height: 47px; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .pause-button:disabled { color: var(--muted); cursor: not-allowed; }
     .summary-icon { display: grid; width: 43px; height: 43px; margin-bottom: 14px; place-items: center; border-radius: 50%; background: #eaf2e7; color: var(--green); font-size: 19px; }
     .summary-total { display: flex; margin: 19px 0 11px; padding: 14px 0; justify-content: space-between; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 11px; }
     .summary-total strong { font-family: var(--mono); font-size: 15px; font-weight: 500; }
     .summary-extras { display: flex; margin-bottom: 22px; justify-content: space-between; color: var(--muted); font-size: 10px; }
     .summary-extras strong { color: var(--green); font-weight: 600; }
+    .return-dialog { max-height: calc(100dvh - 40px); overflow: auto; }
+    .return-step { display: none; gap: 13px; margin: 18px 0; }
+    .return-step.active { display: grid; }
+    .return-field { display: grid; gap: 7px; font-size: 11px; font-weight: 600; }
+    .return-field select { width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--ink); font-size: 11px; }
+    .return-feedback { margin: 0; padding: 10px 11px; border-radius: 5px; background: #f5f7ef; color: #697366; font-size: 10px; line-height: 1.6; }
+    .return-feedback.warning { border: 1px solid #f0d7b6; background: #fff7eb; color: #80501f; }
+    .return-rewards { display: grid; gap: 9px; margin: 0; padding: 12px; border: 1px solid var(--line); border-radius: 5px; }
+    .return-rewards legend { padding: 0 4px; font-size: 11px; font-weight: 700; }
+    .return-reward-option { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .return-reward-option input, .return-check-option input { margin: 2px 0 0; accent-color: var(--green); }
+    .return-photo { display: grid; gap: 9px; }
+    .return-photo input { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 5px; background: #fafbf8; font-size: 10px; }
+    .return-photo-preview { display: none; width: 100%; max-height: 190px; object-fit: contain; border-radius: 5px; background: #f2f4eb; }
+    .return-photo-preview.visible { display: block; }
+    .return-check-option { display: flex; align-items: flex-start; gap: 9px; padding: 12px; border: 1px solid var(--line); border-radius: 5px; font-size: 11px; line-height: 1.5; }
+    .return-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .return-policy { margin: 12px 0 0; color: var(--muted); font-size: 9px; line-height: 1.6; }
+    .summary-return { display: grid; gap: 7px; margin: 0 0 18px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .summary-return strong { color: var(--ink); font-weight: 600; }
     .profile-page { position: fixed; z-index: 9; inset: 72px 0 0; display: none; overflow: auto; padding: 50px 24px; background: var(--canvas); }
     .profile-page.open { display: block; animation: page-in .22s ease both; }
     @keyframes page-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
@@ -387,11 +410,59 @@
   <div class="overlay" id="trip-overlay">
     <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="trip-title">
       <p class="dialog-kicker" data-i18n="tripKicker">Η ΔΙΑΔΡΟΜΗ ΣΑΣ</p><h2 id="trip-title" data-i18n="tripTitle">Η διαδρομή βρίσκεται σε εξέλιξη</h2>
-      <span class="trip-status" id="trip-status"><i></i><span data-i18n="tripStatus">Το αυτοκίνητο ξεκλειδώθηκε · Οδηγείτε με ασφάλεια</span></span>
+      <span class="trip-status" id="trip-status" aria-live="polite"><i></i><span data-i18n="tripStatus">Το αυτοκίνητο ξεκλειδώθηκε · Οδηγείτε με ασφάλεια</span></span>
       <p class="dialog-copy" id="trip-car-name" style="margin-bottom:5px">VW e-Up!</p>
       <div class="trip-cost" id="trip-cost">0,00&nbsp;€</div><p class="trip-detail"><span data-i18n="tripDuration">Διάρκεια</span> <span id="trip-duration">00:00</span> · <span id="trip-rate">0,19&nbsp;€</span> / <span data-i18n="minute">λεπτό</span></p>
-      <div class="trip-actions"><button class="pause-button" id="pause-trip" type="button">Ⅱ <span data-i18n="pauseBilling">Pause billing</span></button><button class="primary-button" id="end-trip" type="button" data-i18n="endTrip">End trip</button></div>
+      <p class="trip-parking-countdown" id="temporary-parking-countdown" hidden><span id="temporary-parking-label" data-i18n="temporaryParkingRemaining">Temporary parking remaining</span><strong id="temporary-parking-time">10:00</strong></p>
+      <div class="trip-actions"><button class="pause-button" id="temporary-parking" type="button">Ⅱ <span data-i18n="startTemporaryParking">Start temporary parking</span></button><button class="primary-button" id="return-vehicle" type="button" data-i18n="returnVehicle">Return car</button></div>
       <p class="reservation-note" data-i18n="parkingNotice">Return the car to an approved UniLoop parking area. No real vehicle is connected.</p>
+    </section>
+  </div>
+
+  <div class="overlay" id="return-overlay">
+    <section class="dialog return-dialog" role="dialog" aria-modal="true" aria-labelledby="return-title">
+      <p class="dialog-kicker"><span data-i18n="returnKicker">RETURN VEHICLE</span> · <span id="return-step-count">1 / 3</span></p><h2 id="return-title" data-i18n="returnTitle">Return your car</h2>
+      <p class="dialog-copy" id="return-car-name"></p>
+      <div class="return-step active" id="return-step-location">
+        <label class="return-field" for="return-parking"><span data-i18n="returnLocationLabel">Choose a return location</span>
+          <select id="return-parking">
+            <option value="" data-i18n="returnLocationPlaceholder">Select parking type</option>
+            <option value="public-street" data-i18n="parkingPublicStreet">Legal, accessible public street parking in an allowed zone</option>
+            <option value="private-garage" data-i18n="parkingPrivateGarage">Private garage</option>
+            <option value="enclosed-lot" data-i18n="parkingEnclosedLot">Underground or enclosed parking</option>
+            <option value="restricted-area" data-i18n="parkingRestrictedArea">Gated or access-restricted area</option>
+            <option value="outside-zone" data-i18n="parkingOutsideZone">Outside an allowed zone</option>
+          </select>
+        </label>
+        <p class="return-feedback" id="return-location-feedback" role="status" data-i18n="parkingStatusPrompt">Choose a location to continue. Live location checks are not available in this demo.</p>
+        <fieldset class="return-rewards">
+          <legend data-i18n="rewardPointLabel">Optional reward point</legend>
+          <label class="return-reward-option"><input type="radio" name="return-reward" value="none" checked><span data-i18n="rewardNone">No reward point</span></label>
+          <label class="return-reward-option"><input type="radio" name="return-reward" value="point-a"><span data-i18n="rewardPointA">Demo reward point A · +10 stars · 250 m extra walk</span></label>
+          <label class="return-reward-option"><input type="radio" name="return-reward" value="point-b"><span data-i18n="rewardPointB">Demo reward point B · +10 stars · 400 m extra walk</span></label>
+        </fieldset>
+        <p class="return-feedback" data-i18n="returnLocationDisclosure">Location selection is a demo attestation, not a GPS or parking-space verification.</p>
+        <button class="primary-button" id="continue-to-photo" type="button" data-i18n="continueToPhoto" disabled>Continue to photo →</button>
+      </div>
+      <div class="return-step" id="return-step-photo">
+        <label class="return-field"><span data-i18n="returnPhotoLabel">Take a return photo</span>
+          <span class="return-feedback" data-i18n="returnPhotoInstructions">Use the camera to clearly show the license plate and the parking position with its surroundings.</span>
+          <span class="return-photo"><input id="return-photo" type="file" accept="image/*" capture="environment" aria-label="Take a clear return photo showing the license plate and surroundings" data-i18n-aria="returnPhotoAria"><img class="return-photo-preview" id="return-photo-preview" alt="Selected return photo preview" aria-label="Selected return photo preview" data-i18n-aria="returnPhotoPreview"></span>
+        </label>
+        <p class="return-feedback" id="return-photo-feedback" role="status" data-i18n="returnPhotoRequired">A photo is required before continuing.</p>
+        <p class="return-feedback" data-i18n="returnPhotoDisclosure">This demo only checks that an image was selected; it does not upload or verify the photo.</p>
+        <div class="return-actions"><button class="pause-button" id="back-to-location" type="button" data-i18n="backToLocation">Back</button><button class="primary-button" id="continue-to-checklist" type="button" data-i18n="continueToChecklist" disabled>Continue →</button></div>
+      </div>
+      <div class="return-step" id="return-step-lock">
+        <label class="return-check-option"><input id="confirm-belongings" type="checkbox"><span data-i18n="belongingsCheck">I have removed all my personal belongings from the car.</span></label>
+        <p class="return-feedback" data-i18n="lockDisclosure">The lock action below is simulated; no real vehicle is connected.</p>
+        <button class="pause-button" id="lock-vehicle" type="button" disabled><span data-i18n="lockVehicle">Lock car</span></button>
+        <p class="return-feedback hidden" id="return-lock-status" role="status" data-i18n="lockSimulated">Demo lock confirmed. No real vehicle was locked.</p>
+        <button class="primary-button" id="confirm-return" type="button" data-i18n="confirmReturn" disabled>Confirm return and end rental</button>
+        <button class="pause-button" id="back-to-photo" type="button" data-i18n="backToPhoto">Back to photo</button>
+      </div>
+      <p class="return-policy" data-i18n="returnPolicyNotice">Confirmed violations may cancel stars and temporarily block bookings during review; relocation fees follow published rates, and serious or repeated cases may lead to longer suspension. Users must see the reason and recovery conditions and be able to appeal. GPS alone is not proof. This demo does not enforce these policies.</p>
+      <button class="secondary-button" id="back-to-trip" type="button" data-i18n="backToTrip">Back to trip</button>
     </section>
   </div>
 
@@ -400,7 +471,9 @@
       <div class="summary-icon" aria-hidden="true">✓</div><p class="dialog-kicker">Η ΔΙΑΔΡΟΜΗ ΟΛΟΚΛΗΡΩΘΗΚΕ</p>
       <h2 id="summary-title" data-i18n="summaryTitle">Η διαδρομή ολοκληρώθηκε</h2><p class="dialog-copy" data-i18n="summaryDescription">Η δοκιμαστική διαδρομή ολοκληρώθηκε. Δεν έγινε καμία χρέωση.</p>
       <div class="summary-total"><span data-i18n="tripFare">Κόστος διαδρομής</span><strong id="summary-cost">0,00&nbsp;€</strong></div>
-      <div class="summary-extras"><span><span data-i18n="tripDuration">Διάρκεια</span> <strong id="summary-duration">00:00</strong></span><span><strong>+10</strong> <span data-i18n="pointsEarned">πόντοι</span></span></div>
+      <div class="summary-extras"><span><span data-i18n="tripDuration">Διάρκεια</span> <strong id="summary-duration">00:00</strong></span><span><strong id="summary-points-earned">+0</strong> <span data-i18n="pointsEarned">αστέρια</span></span></div>
+      <div class="summary-return"><span><span data-i18n="receiptVehicle">Vehicle</span>: <strong id="summary-vehicle"></strong></span><span><span data-i18n="receiptParking">Return location</span>: <strong id="summary-parking"></strong></span><span><span data-i18n="receiptReward">Reward point</span>: <strong id="summary-reward"></strong></span></div>
+      <p class="reservation-note" data-i18n="returnCompletedNotice">The car is available again. A later trip requires a new reservation.</p>
       <button class="primary-button" id="back-to-map" type="button"><span data-i18n="backToMap">Back to map</span><span aria-hidden="true">→</span></button>
     </section>
   </div>
@@ -419,26 +492,28 @@
     const messages = {
       en: {
         pageTitle: "UniLoop · Campus Car Sharing in Athens", brandHome: "UniLoop map home", campusOptions: "Campus options", campusName: "Athens University of Economics and Business", campusSubtitle: "Patission campus · Athens",
-        searchLabel: "Search the campus or vehicles", searchPlaceholder: "Search places or cars...", languageLabel: "Language", ridePoints: "Ride points", profileOpen: "Open profile",
+        searchLabel: "Search the campus or vehicles", searchPlaceholder: "Search places or cars...", languageLabel: "Language", ridePoints: "Stars", profileOpen: "Open profile",
         mapLabel: "Athens campus vehicle map", mapMainBuilding: "Main building", mapVictoria: "Victoria", mapEvelpidon: "Evelpidon", mapMuseum: "National Museum", mapPedion: "Pedion tou Areos", mapAverof: "Averof",
         mapCaptionMuseum: "National Archaeological Museum", mapCaptionSquare: "Victoria Square", mapPreview: "Illustrative map of the Patission campus", mapPreviewText: "Map preview · Patission campus", filterLabel: "Filter vehicles", filterAll: "All cars", filterElectric: "Electric", filterAvailable: "Available", markerLabel: "Available vehicle locations", yourLocation: "Your location", mapControls: "Map controls", zoomIn: "Zoom in", zoomOut: "Zoom out", locate: "Centre on my location", navigation: "Main navigation", navFindCar: "Find a car", navProfile: "Profile",
         nearbyLabel: "Nearby vehicles", nearbyEyebrow: "NEARBY VEHICLES", nearbyTitle: "Cars nearby", carsAvailable: "available", pricingLabel: "Demo pricing", pricingDisclosure: "Illustrative rates · no live billing",
-        accountEyebrow: "YOUR ACCOUNT", accountTitle: "Your account", profileLabel: "Your profile", profileName: "Alex", profileSubtitle: "Athens · UniLoop demo account", statTrips: "Trips", statDistance: "Distance", statPoints: "Ride points", accountServices: "ACCOUNT & SERVICE", identityLabel: "Student verification", identityValue: "Demo only · not connected", billingLabel: "Billing", billingValue: "Illustrative rates", supportLabel: "Local requirements", supportValue: "No real vehicle or payment service", recentTrips: "RECENT TRIPS", emptyHistory: "No trips yet.",
+        accountEyebrow: "YOUR ACCOUNT", accountTitle: "Your account", profileLabel: "Your profile", profileName: "Alex", profileSubtitle: "Athens · UniLoop demo account", statTrips: "Trips", statDistance: "Distance", statPoints: "Stars", accountServices: "ACCOUNT & SERVICE", identityLabel: "Student verification", identityValue: "Demo only · not connected", billingLabel: "Billing", billingValue: "Illustrative rates", supportLabel: "Local requirements", supportValue: "No real vehicle or payment service", recentTrips: "RECENT TRIPS", emptyHistory: "No trips yet.",
         vehicleAvailable: "Available now", closeVehicle: "Close vehicle details", minute: "min", batteryLabel: "Battery", walkDistance: "Walk away", rangeLabel: "Est. range", reservationNotice: "Reserve for up to 10 minutes. Your demo trip starts when you unlock the car.", reserveVehicle: "Reserve car", browseCars: "Browse other cars", closeReservation: "Close reservation", reservationTitle: "Car reserved for you", reservationDescription: "Head to the car and start your trip within 10 minutes.", unlockCar: "Unlock and start trip", cancelReservation: "Cancel reservation", prototypeNotice: "Prototype only. This will not unlock a real vehicle.", batteryTooLow: "Battery too low to reserve",
-        tripKicker: "YOUR TRIP", tripTitle: "Trip in progress", tripStatus: "Car unlocked · Drive safely", tripDuration: "Duration", pauseBilling: "Pause billing", resumeTrip: "Resume trip", endTrip: "End trip", tripPaused: "Billing paused", parkingNotice: "Return the car to an approved UniLoop parking area. No real vehicle is connected.",
-        summaryTitle: "Trip complete", summaryDescription: "Your demo trip has ended. No payment has been processed.", tripFare: "Trip fare", pointsEarned: "points", backToMap: "Back to map", emptyResults: "No cars match your search. Try another place or filter.", campusToast: "Only the Athens campus is shown in this demo.", locationToast: "Map centred on your location.",
+        tripKicker: "YOUR TRIP", tripTitle: "Trip in progress", tripStatus: "Car unlocked · Drive safely", tripDuration: "Duration", startTemporaryParking: "Start temporary parking", resumeDriving: "Resume driving", temporaryParkingUsed: "Parking time used", temporaryParkingRemaining: "Temporary parking remaining", temporaryParkingTimeExhausted: "Temporary parking limit reached", temporaryParkingStatus: "Temporarily parked · vehicle remains locked and assigned to you; billing continues", temporaryParkingLimitReached: "Temporary parking limit reached · vehicle remains assigned to you; billing continues", returnVehicle: "Return car", parkingNotice: "Return the car to an approved UniLoop parking area. No real vehicle is connected.",
+        returnKicker: "RETURN VEHICLE", returnTitle: "Return your car", returnLocationLabel: "Choose a return location", returnLocationPlaceholder: "Select parking type", parkingPublicStreet: "Legal, accessible public street parking in an allowed zone", parkingPrivateGarage: "Private garage", parkingEnclosedLot: "Underground or enclosed parking", parkingRestrictedArea: "Gated or access-restricted area", parkingOutsideZone: "Outside an allowed zone", parkingStatusPrompt: "Choose a location to continue. Live location checks are not available in this demo.", parkingStatusAllowed: "Selected as legal public street parking in an allowed zone. This is not GPS-verified.", parkingStatusInvalid: "Not an allowed return location. Move the car to legal public street parking in an allowed zone before continuing.", rewardPointLabel: "Optional reward point", rewardNone: "No reward point", rewardPointA: "Demo reward point A · +10 stars · 250 m extra walk", rewardPointB: "Demo reward point B · +10 stars · 400 m extra walk", returnLocationDisclosure: "Location selection is a demo attestation, not a GPS or parking-space verification.", continueToPhoto: "Continue to photo →", returnPhotoLabel: "Take a return photo", returnPhotoAria: "Take a clear return photo showing the license plate and surroundings", returnPhotoPreview: "Selected return photo preview", returnPhotoInstructions: "Use the camera to clearly show the license plate and the parking position with its surroundings.", returnPhotoRequired: "A photo is required before continuing.", returnPhotoInvalid: "Select an image file to continue.", returnPhotoSelected: "Photo selected. Continue when ready.", returnPhotoDisclosure: "This demo only checks that an image was selected; it does not upload or verify the photo.", continueToChecklist: "Continue →", backToLocation: "Back", belongingsCheck: "I have removed all my personal belongings from the car.", lockDisclosure: "The lock action below is simulated; no real vehicle is connected.", lockVehicle: "Lock car", lockSimulated: "Demo lock confirmed. No real vehicle was locked.", lockRequired: "Confirm the demo lock before ending the rental.", confirmReturn: "Confirm return and end rental", backToPhoto: "Back to photo", backToTrip: "Back to trip", returnPolicyNotice: "Confirmed violations may cancel stars and temporarily block bookings during review; relocation fees follow published rates, and serious or repeated cases may lead to longer suspension. Users must see the reason and recovery conditions and be able to appeal. GPS alone is not proof. This demo does not enforce these policies.",
+        summaryTitle: "Trip complete", summaryDescription: "Demo receipt only. No real payment was processed.", tripFare: "Trip fare", pointsEarned: "stars", receiptVehicle: "Vehicle", receiptParking: "Return location", receiptReward: "Reward point", receiptNoReward: "None", returnCompletedNotice: "The car is available again. A later trip requires a new reservation.", backToMap: "Back to map", emptyResults: "No cars match your search. Try another place or filter.", campusToast: "Only the Athens campus is shown in this demo.", locationToast: "Map centred on your location.",
         reservationExpired: "Reservation expired. The car is available again.", reservationCancelled: "Reservation cancelled. The car is available again.", tripAria: "{name}, {price} per minute, {distance} away", viewCarAria: "View {name} details", batteryAndWalk: "battery · {distance} walk", zoomToast: "Map zoom: {distance}"
       },
       el: {
         pageTitle: "UniLoop · Κοινόχρηστα αυτοκίνητα στην Αθήνα", brandHome: "Αρχική χάρτη UniLoop", campusOptions: "Επιλογές πανεπιστημιούπολης", campusName: "Οικονομικό Πανεπιστήμιο Αθηνών", campusSubtitle: "Πανεπιστημιούπολη Πατησίων · Αθήνα",
-        searchLabel: "Αναζήτηση χώρων ή οχημάτων", searchPlaceholder: "Αναζήτηση χώρου ή αυτοκινήτου...", languageLabel: "Γλώσσα", ridePoints: "Πόντοι διαδρομών", profileOpen: "Άνοιγμα προφίλ",
+        searchLabel: "Αναζήτηση χώρων ή οχημάτων", searchPlaceholder: "Αναζήτηση χώρου ή αυτοκινήτου...", languageLabel: "Γλώσσα", ridePoints: "Αστέρια", profileOpen: "Άνοιγμα προφίλ",
         mapLabel: "Χάρτης οχημάτων στην Αθήνα", mapMainBuilding: "Κεντρικό κτίριο", mapVictoria: "Βικτώρια", mapEvelpidon: "Ευελπίδων", mapMuseum: "Εθνικό Μουσείο", mapPedion: "Πεδίον του Άρεως", mapAverof: "Αβέρωφ",
         mapCaptionMuseum: "Εθνικό Αρχαιολογικό Μουσείο", mapCaptionSquare: "Πλατεία Βικτωρίας", mapPreview: "Ενδεικτικός χάρτης της πανεπιστημιούπολης Πατησίων", mapPreviewText: "Χάρτης · Πανεπιστημιούπολη Πατησίων", filterLabel: "Φίλτρα οχημάτων", filterAll: "Όλα", filterElectric: "Ηλεκτρικά", filterAvailable: "Διαθέσιμα", markerLabel: "Θέσεις διαθέσιμων οχημάτων", yourLocation: "Η τοποθεσία σας", mapControls: "Χειριστήρια χάρτη", zoomIn: "Μεγέθυνση χάρτη", zoomOut: "Σμίκρυνση χάρτη", locate: "Κεντράρισμα στην τοποθεσία μου", navigation: "Κύρια πλοήγηση", navFindCar: "Αυτοκίνητα", navProfile: "Προφίλ",
         nearbyLabel: "Κοντινά οχήματα", nearbyEyebrow: "ΚΟΝΤΙΝΑ ΟΧΗΜΑΤΑ", nearbyTitle: "Οχήματα κοντά σας", carsAvailable: "διαθέσιμα", pricingLabel: "Τιμές επίδειξης", pricingDisclosure: "Ενδεικτικές τιμές · χωρίς χρέωση",
-        accountEyebrow: "Ο ΛΟΓΑΡΙΑΣΜΟΣ ΣΑΣ", accountTitle: "Ο λογαριασμός σας", profileLabel: "Το προφίλ σας", profileName: "Αλέξης", profileSubtitle: "Αθήνα · δοκιμαστικός λογαριασμός UniLoop", statTrips: "Διαδρομές", statDistance: "Απόσταση", statPoints: "Πόντοι διαδρομών", accountServices: "ΛΟΓΑΡΙΑΣΜΟΣ & ΥΠΗΡΕΣΙΕΣ", identityLabel: "Φοιτητική ταυτοποίηση", identityValue: "Μόνο επίδειξη · χωρίς σύνδεση", billingLabel: "Χρέωση", billingValue: "Ενδεικτικές τιμές", supportLabel: "Τοπικές υπηρεσίες", supportValue: "Δεν συνδέεται όχημα ή πληρωμή", recentTrips: "ΠΡΟΣΦΑΤΕΣ ΔΙΑΔΡΟΜΕΣ", emptyHistory: "Δεν υπάρχουν διαδρομές ακόμη.",
+        accountEyebrow: "Ο ΛΟΓΑΡΙΑΣΜΟΣ ΣΑΣ", accountTitle: "Ο λογαριασμός σας", profileLabel: "Το προφίλ σας", profileName: "Αλέξης", profileSubtitle: "Αθήνα · δοκιμαστικός λογαριασμός UniLoop", statTrips: "Διαδρομές", statDistance: "Απόσταση", statPoints: "Αστέρια", accountServices: "ΛΟΓΑΡΙΑΣΜΟΣ & ΥΠΗΡΕΣΙΕΣ", identityLabel: "Φοιτητική ταυτοποίηση", identityValue: "Μόνο επίδειξη · χωρίς σύνδεση", billingLabel: "Χρέωση", billingValue: "Ενδεικτικές τιμές", supportLabel: "Τοπικές υπηρεσίες", supportValue: "Δεν συνδέεται όχημα ή πληρωμή", recentTrips: "ΠΡΟΣΦΑΤΕΣ ΔΙΑΔΡΟΜΕΣ", emptyHistory: "Δεν υπάρχουν διαδρομές ακόμη.",
         vehicleAvailable: "Διαθέσιμο τώρα", closeVehicle: "Κλείσιμο λεπτομερειών οχήματος", minute: "λεπτό", batteryLabel: "Μπαταρία", walkDistance: "Απόσταση με τα πόδια", rangeLabel: "Εκτιμώμενη αυτονομία", reservationNotice: "Κράτηση έως 10 λεπτά. Η δοκιμαστική διαδρομή ξεκινά με το ξεκλείδωμα.", reserveVehicle: "Κράτηση αυτοκινήτου", browseCars: "Δείτε άλλα αυτοκίνητα", closeReservation: "Κλείσιμο κράτησης", reservationTitle: "Το αυτοκίνητο κρατήθηκε για εσάς", reservationDescription: "Πηγαίνετε στο αυτοκίνητο και ξεκινήστε εντός 10 λεπτών.", unlockCar: "Ξεκλείδωμα και έναρξη", cancelReservation: "Ακύρωση κράτησης", prototypeNotice: "Μόνο για επίδειξη. Δεν ξεκλειδώνει πραγματικό όχημα.", batteryTooLow: "Ανεπαρκής μπαταρία για κράτηση",
-        tripKicker: "Η ΔΙΑΔΡΟΜΗ ΣΑΣ", tripTitle: "Η διαδρομή βρίσκεται σε εξέλιξη", tripStatus: "Το αυτοκίνητο ξεκλειδώθηκε · Οδηγείτε με ασφάλεια", tripDuration: "Διάρκεια", pauseBilling: "Παύση χρέωσης", resumeTrip: "Συνέχεια διαδρομής", endTrip: "Τέλος διαδρομής", tripPaused: "Η χρέωση έχει διακοπεί", parkingNotice: "Επιστρέψτε το αυτοκίνητο σε εγκεκριμένο χώρο στάθμευσης UniLoop. Δεν είναι συνδεδεμένο πραγματικό όχημα.",
-        summaryTitle: "Η διαδρομή ολοκληρώθηκε", summaryDescription: "Η δοκιμαστική διαδρομή ολοκληρώθηκε. Δεν έγινε καμία χρέωση.", tripFare: "Κόστος διαδρομής", pointsEarned: "πόντοι", backToMap: "Επιστροφή στον χάρτη", emptyResults: "Δεν βρέθηκαν αυτοκίνητα. Δοκιμάστε άλλη τοποθεσία ή φίλτρο.", campusToast: "Αυτή η επίδειξη περιλαμβάνει μόνο την πανεπιστημιούπολη της Αθήνας.", locationToast: "Ο χάρτης κεντραρίστηκε στην τοποθεσία σας.",
+        tripKicker: "Η ΔΙΑΔΡΟΜΗ ΣΑΣ", tripTitle: "Η διαδρομή βρίσκεται σε εξέλιξη", tripStatus: "Το αυτοκίνητο ξεκλειδώθηκε · Οδηγείτε με ασφάλεια", tripDuration: "Διάρκεια", startTemporaryParking: "Προσωρινή στάθμευση", resumeDriving: "Συνέχεια οδήγησης", temporaryParkingUsed: "Ο χρόνος στάθμευσης εξαντλήθηκε", temporaryParkingRemaining: "Υπόλοιπος χρόνος στάθμευσης", temporaryParkingTimeExhausted: "Το όριο προσωρινής στάθμευσης έληξε", temporaryParkingStatus: "Προσωρινή στάθμευση · το όχημα παραμένει κλειδωμένο και δεσμευμένο σε εσάς · η χρέωση συνεχίζεται", temporaryParkingLimitReached: "Έληξε το όριο στάθμευσης · το όχημα παραμένει δεσμευμένο σε εσάς · η χρέωση συνεχίζεται", returnVehicle: "Επιστροφή αυτοκινήτου", parkingNotice: "Επιστρέψτε το αυτοκίνητο σε εγκεκριμένο χώρο στάθμευσης UniLoop. Δεν είναι συνδεδεμένο πραγματικό όχημα.",
+        returnKicker: "ΕΠΙΣΤΡΟΦΗ ΟΧΗΜΑΤΟΣ", returnTitle: "Επιστρέψτε το αυτοκίνητο", returnLocationLabel: "Επιλέξτε τοποθεσία επιστροφής", returnLocationPlaceholder: "Επιλέξτε τύπο στάθμευσης", parkingPublicStreet: "Νόμιμη, ελεύθερα προσβάσιμη δημόσια θέση σε επιτρεπόμενη ζώνη", parkingPrivateGarage: "Ιδιωτικό γκαράζ", parkingEnclosedLot: "Υπόγειος ή κλειστός χώρος στάθμευσης", parkingRestrictedArea: "Χώρος με μπάρα ή περιορισμένη πρόσβαση", parkingOutsideZone: "Εκτός επιτρεπόμενης ζώνης", parkingStatusPrompt: "Επιλέξτε τοποθεσία για να συνεχίσετε. Δεν υπάρχει ζωντανός έλεγχος θέσης σε αυτή την επίδειξη.", parkingStatusAllowed: "Επιλέχθηκε νόμιμη δημόσια θέση σε επιτρεπόμενη ζώνη. Δεν έχει επαληθευτεί μέσω GPS.", parkingStatusInvalid: "Η τοποθεσία δεν επιτρέπεται. Μετακινήστε το αυτοκίνητο σε νόμιμη δημόσια θέση εντός επιτρεπόμενης ζώνης.", rewardPointLabel: "Προαιρετικό σημείο επιβράβευσης", rewardNone: "Χωρίς σημείο επιβράβευσης", rewardPointA: "Δοκιμαστικό σημείο επιβράβευσης A · +10 αστέρια · 250 μ. επιπλέον περπάτημα", rewardPointB: "Δοκιμαστικό σημείο επιβράβευσης B · +10 αστέρια · 400 μ. επιπλέον περπάτημα", returnLocationDisclosure: "Η επιλογή τοποθεσίας είναι δήλωση επίδειξης, όχι επαλήθευση GPS ή θέσης στάθμευσης.", continueToPhoto: "Συνέχεια στη φωτογραφία →", returnPhotoLabel: "Φωτογραφίστε το όχημα", returnPhotoAria: "Φωτογραφίστε καθαρά την πινακίδα και τον περιβάλλοντα χώρο στάθμευσης", returnPhotoPreview: "Προεπισκόπηση φωτογραφίας επιστροφής", returnPhotoInstructions: "Χρησιμοποιήστε την κάμερα ώστε να φαίνονται καθαρά η πινακίδα και η θέση στάθμευσης με τον περιβάλλοντα χώρο.", returnPhotoRequired: "Απαιτείται φωτογραφία για να συνεχίσετε.", returnPhotoInvalid: "Επιλέξτε αρχείο εικόνας για να συνεχίσετε.", returnPhotoSelected: "Η φωτογραφία επιλέχθηκε. Συνεχίστε όταν είστε έτοιμοι.", returnPhotoDisclosure: "Η επίδειξη ελέγχει μόνο ότι επιλέχθηκε εικόνα· δεν τη μεταφορτώνει ούτε την επαληθεύει.", continueToChecklist: "Συνέχεια →", backToLocation: "Πίσω", belongingsCheck: "Έχω πάρει όλα τα προσωπικά μου αντικείμενα από το αυτοκίνητο.", lockDisclosure: "Το κλείδωμα παρακάτω είναι προσομοίωση· δεν είναι συνδεδεμένο πραγματικό όχημα.", lockVehicle: "Κλείδωμα αυτοκινήτου", lockSimulated: "Επιβεβαιώθηκε το δοκιμαστικό κλείδωμα. Δεν κλειδώθηκε πραγματικό όχημα.", lockRequired: "Επιβεβαιώστε το δοκιμαστικό κλείδωμα πριν ολοκληρώσετε τη μίσθωση.", confirmReturn: "Επιβεβαίωση επιστροφής και λήξης", backToPhoto: "Πίσω στη φωτογραφία", backToTrip: "Επιστροφή στη διαδρομή", returnPolicyNotice: "Οι επιβεβαιωμένες παραβάσεις μπορεί να ακυρώσουν τα αστέρια και να εμποδίσουν προσωρινά νέες κρατήσεις κατά τον έλεγχο· τα έξοδα μετακίνησης ακολουθούν δημοσιευμένο τιμοκατάλογο, ενώ σοβαρές ή επαναλαμβανόμενες παραβάσεις μπορεί να οδηγήσουν σε μεγαλύτερη αναστολή. Ο χρήστης πρέπει να βλέπει τον λόγο και τους όρους επαναφοράς και να μπορεί να υποβάλει ένσταση. Το GPS μόνο του δεν αποτελεί απόδειξη. Η επίδειξη δεν εφαρμόζει αυτές τις πολιτικές.",
+        summaryTitle: "Η διαδρομή ολοκληρώθηκε", summaryDescription: "Μόνο δοκιμαστική απόδειξη. Δεν έγινε πραγματική χρέωση.", tripFare: "Κόστος διαδρομής", pointsEarned: "αστέρια", receiptVehicle: "Όχημα", receiptParking: "Τοποθεσία επιστροφής", receiptReward: "Σημείο επιβράβευσης", receiptNoReward: "Κανένα", returnCompletedNotice: "Το αυτοκίνητο είναι ξανά διαθέσιμο. Για επόμενη διαδρομή απαιτείται νέα κράτηση.", backToMap: "Επιστροφή στον χάρτη", emptyResults: "Δεν βρέθηκαν αυτοκίνητα. Δοκιμάστε άλλη τοποθεσία ή φίλτρο.", campusToast: "Αυτή η επίδειξη περιλαμβάνει μόνο την πανεπιστημιούπολη της Αθήνας.", locationToast: "Ο χάρτης κεντραρίστηκε στην τοποθεσία σας.",
         reservationExpired: "Η κράτηση έληξε. Το αυτοκίνητο είναι ξανά διαθέσιμο.", reservationCancelled: "Η κράτηση ακυρώθηκε. Το αυτοκίνητο είναι ξανά διαθέσιμο.", tripAria: "{name}, {price} ανά λεπτό, σε απόσταση {distance}", viewCarAria: "Προβολή λεπτομερειών για {name}", batteryAndWalk: "μπαταρία · {distance} με τα πόδια", zoomToast: "Μεγέθυνση χάρτη: {distance}"
       }
     };
@@ -450,6 +525,7 @@
     const overlays = {
       reservation: document.getElementById("reservation-overlay"),
       trip: document.getElementById("trip-overlay"),
+      return: document.getElementById("return-overlay"),
       summary: document.getElementById("summary-overlay")
     };
     let activeVehicle = vehicles[0];
@@ -459,9 +535,13 @@
     let reservationInterval = null;
     let tripInterval = null;
     let tripStartedAt = 0;
-    let pausedAt = 0;
-    let pausedDuration = 0;
-    let isPaused = false;
+    const temporaryParkingLimitMs = 10 * 60 * 1000;
+    let temporaryParkingStartedAt = 0;
+    let temporaryParkingUsedMs = 0;
+    let isTemporaryParking = false;
+    let returnPhotoUrl = null;
+    let isVehicleLocked = false;
+    let tripCompleted = false;
     let totalTrips = 0;
     let totalDistance = 0;
     let toastTimeout = null;
@@ -619,14 +699,17 @@
     function startTrip() {
       window.clearInterval(reservationInterval);
       reservationInterval = null;
+      resetReturnFlow();
       tripStartedAt = Date.now();
-      pausedDuration = 0;
-      pausedAt = 0;
-      isPaused = false;
+      temporaryParkingStartedAt = 0;
+      temporaryParkingUsedMs = 0;
+      isTemporaryParking = false;
+      tripCompleted = false;
       document.getElementById("trip-car-name").textContent = activeVehicle.name;
       document.getElementById("trip-rate").textContent = formatCurrency(activeVehicle.price);
       document.getElementById("trip-status").innerHTML = `<i></i>${t("tripStatus")}`;
-      document.getElementById("pause-trip").innerHTML = `Ⅱ <span>${t("pauseBilling")}</span>`;
+      document.getElementById("temporary-parking").disabled = false;
+      document.getElementById("temporary-parking-countdown").hidden = true;
       showOverlay("trip");
       updateTripUI();
       window.clearInterval(tripInterval);
@@ -634,46 +717,157 @@
     }
 
     function tripElapsedSeconds() {
-      const end = isPaused ? pausedAt : Date.now();
-      return Math.max(0, Math.floor((end - tripStartedAt - pausedDuration) / 1000));
+      return Math.max(0, Math.floor((Date.now() - tripStartedAt) / 1000));
     }
 
     function updateTripUI() {
+      const now = Date.now();
+      if (isTemporaryParking && temporaryParkingUsedMs + now - temporaryParkingStartedAt >= temporaryParkingLimitMs) {
+        temporaryParkingUsedMs = temporaryParkingLimitMs;
+        temporaryParkingStartedAt = 0;
+        isTemporaryParking = false;
+      }
+
       const elapsed = tripElapsedSeconds();
       const cost = elapsed / 60 * activeVehicle.price;
       document.getElementById("trip-cost").textContent = formatCurrency(cost);
       document.getElementById("trip-duration").textContent = formatTime(elapsed);
+      const parkingLimitReached = temporaryParkingUsedMs >= temporaryParkingLimitMs;
+      const parkingUsedMs = temporaryParkingUsedMs + (isTemporaryParking ? now - temporaryParkingStartedAt : 0);
+      const parkingRemainingSeconds = Math.ceil(Math.max(0, temporaryParkingLimitMs - parkingUsedMs) / 1000);
+      const parkingCountdown = document.getElementById("temporary-parking-countdown");
+      const parkingButton = document.getElementById("temporary-parking");
+      const status = document.getElementById("trip-status");
+      parkingCountdown.hidden = !isTemporaryParking && !parkingLimitReached;
+      document.getElementById("temporary-parking-label").textContent = t(parkingLimitReached ? "temporaryParkingTimeExhausted" : "temporaryParkingRemaining");
+      document.getElementById("temporary-parking-time").textContent = formatTime(parkingRemainingSeconds);
+      parkingButton.disabled = parkingLimitReached;
+      parkingButton.innerHTML = `${isTemporaryParking ? "▶" : "Ⅱ"} <span>${t(parkingLimitReached ? "temporaryParkingUsed" : isTemporaryParking ? "resumeDriving" : "startTemporaryParking")}</span>`;
+      status.innerHTML = `<i${isTemporaryParking || parkingLimitReached ? ' style="background:#d8aa54"' : ""}></i>${t(isTemporaryParking ? "temporaryParkingStatus" : parkingLimitReached ? "temporaryParkingLimitReached" : "tripStatus")}`;
     }
 
-    function togglePause() {
-      const pauseButton = document.getElementById("pause-trip");
-      const status = document.getElementById("trip-status");
-      if (isPaused) {
-        pausedDuration += Date.now() - pausedAt;
-        pausedAt = 0;
-        isPaused = false;
-        pauseButton.innerHTML = `Ⅱ <span>${t("pauseBilling")}</span>`;
-        status.innerHTML = `<i></i>${t("tripStatus")}`;
-      } else {
-        pausedAt = Date.now();
-        isPaused = true;
-        pauseButton.innerHTML = `▶ <span>${t("resumeTrip")}</span>`;
-        status.innerHTML = `<i style="background:#d8aa54"></i>${t("tripPaused")}`;
+    function toggleTemporaryParking() {
+      if (isTemporaryParking) {
+        temporaryParkingUsedMs = Math.min(temporaryParkingLimitMs, temporaryParkingUsedMs + Date.now() - temporaryParkingStartedAt);
+        temporaryParkingStartedAt = 0;
+        isTemporaryParking = false;
+      } else if (temporaryParkingUsedMs < temporaryParkingLimitMs) {
+        temporaryParkingStartedAt = Date.now();
+        isTemporaryParking = true;
       }
       updateTripUI();
     }
 
-    function endTrip() {
+    function beginReturn() {
+      if (isTemporaryParking) {
+        temporaryParkingUsedMs = Math.min(temporaryParkingLimitMs, temporaryParkingUsedMs + Date.now() - temporaryParkingStartedAt);
+        temporaryParkingStartedAt = 0;
+        isTemporaryParking = false;
+        updateTripUI();
+      }
+      document.getElementById("return-car-name").textContent = `${activeVehicle.name} · ${activeVehicle.place.el}`;
+      showOverlay("return");
+    }
+
+    function setReturnStep(step) {
+      const stepName = ["", "location", "photo", "lock"][step];
+      document.querySelectorAll(".return-step").forEach((section) => {
+        section.classList.toggle("active", section.id === `return-step-${stepName}`);
+      });
+      document.getElementById("return-step-count").textContent = `${step} / 3`;
+    }
+
+    function updateReturnRequirements() {
+      const locationAllowed = document.getElementById("return-parking").value === "public-street";
+      const hasPhoto = Boolean(returnPhotoUrl);
+      const belongingsConfirmed = document.getElementById("confirm-belongings").checked;
+      const locationFeedback = document.getElementById("return-location-feedback");
+      const parkingSelection = document.getElementById("return-parking").value;
+      locationFeedback.textContent = !parkingSelection
+        ? t("parkingStatusPrompt")
+        : locationAllowed ? t("parkingStatusAllowed") : t("parkingStatusInvalid");
+      locationFeedback.classList.toggle("warning", Boolean(parkingSelection) && !locationAllowed);
+      locationFeedback.setAttribute("role", parkingSelection && !locationAllowed ? "alert" : "status");
+      document.getElementById("continue-to-photo").disabled = !locationAllowed;
+      document.getElementById("continue-to-checklist").disabled = !hasPhoto;
+      document.getElementById("lock-vehicle").disabled = !(locationAllowed && hasPhoto && belongingsConfirmed) || isVehicleLocked;
+      document.getElementById("confirm-return").disabled = !isVehicleLocked;
+    }
+
+    function resetReturnFlow() {
+      if (returnPhotoUrl) URL.revokeObjectURL(returnPhotoUrl);
+      returnPhotoUrl = null;
+      isVehicleLocked = false;
+      document.getElementById("return-parking").value = "";
+      document.querySelector('input[name="return-reward"][value="none"]').checked = true;
+      document.getElementById("return-photo").value = "";
+      document.getElementById("return-photo-preview").removeAttribute("src");
+      document.getElementById("return-photo-preview").classList.remove("visible");
+      document.getElementById("return-photo-feedback").textContent = t("returnPhotoRequired");
+      document.getElementById("confirm-belongings").checked = false;
+      document.getElementById("return-lock-status").classList.add("hidden");
+      setReturnStep(1);
+      updateReturnRequirements();
+    }
+
+    function selectReturnPhoto() {
+      if (returnPhotoUrl) URL.revokeObjectURL(returnPhotoUrl);
+      returnPhotoUrl = null;
+      const file = document.getElementById("return-photo").files[0];
+      const feedback = document.getElementById("return-photo-feedback");
+      const preview = document.getElementById("return-photo-preview");
+      preview.removeAttribute("src");
+      preview.classList.remove("visible");
+      if (file && file.type.startsWith("image/")) {
+        returnPhotoUrl = URL.createObjectURL(file);
+        preview.src = returnPhotoUrl;
+        preview.classList.add("visible");
+        feedback.textContent = t("returnPhotoSelected");
+      } else {
+        feedback.textContent = file ? t("returnPhotoInvalid") : t("returnPhotoRequired");
+      }
+      updateReturnRequirements();
+    }
+
+    function lockVehicle() {
+      if (document.getElementById("lock-vehicle").disabled) return;
+      isVehicleLocked = true;
+      document.getElementById("return-lock-status").classList.remove("hidden");
+      updateReturnRequirements();
+    }
+
+    function leaveReturnFlow() {
+      isVehicleLocked = false;
+      document.getElementById("return-lock-status").classList.add("hidden");
+      updateReturnRequirements();
+      showOverlay("trip");
+    }
+
+    function completeTrip() {
+      if (tripCompleted) return;
+      if (!isVehicleLocked) {
+        showToast(t("lockRequired"));
+        return;
+      }
+      tripCompleted = true;
       updateTripUI();
       const elapsed = tripElapsedSeconds();
       const cost = (elapsed / 60 * activeVehicle.price).toFixed(2);
+      const rewardValue = document.querySelector('input[name="return-reward"]:checked').value;
+      const starsEarned = rewardValue === "none" ? 0 : 10;
       window.clearInterval(tripInterval);
       tripInterval = null;
       totalTrips += 1;
       totalDistance += Math.max(.4, Math.round(elapsed / 90 * 10) / 10);
       document.getElementById("summary-cost").textContent = formatCurrency(Number(cost));
       document.getElementById("summary-duration").textContent = formatTime(elapsed);
-      document.getElementById("credit-count").textContent = Number(document.getElementById("credit-count").textContent) + 10;
+      document.getElementById("summary-points-earned").textContent = `+${starsEarned}`;
+      document.getElementById("summary-vehicle").textContent = activeVehicle.name;
+      document.getElementById("summary-parking").textContent = document.getElementById("return-parking").selectedOptions[0].textContent;
+      document.getElementById("summary-reward").textContent = rewardValue === "none"
+        ? t("receiptNoReward")
+        : document.querySelector(`input[name="return-reward"][value="${rewardValue}"]`).parentElement.textContent.trim();
+      document.getElementById("credit-count").textContent = Number(document.getElementById("credit-count").textContent) + starsEarned;
       document.getElementById("profile-trips").textContent = totalTrips;
       document.getElementById("profile-distance").textContent = `${formatNumber(totalDistance, 1)} χλμ.`;
       document.getElementById("profile-stars").textContent = document.getElementById("credit-count").textContent;
@@ -689,6 +883,8 @@
       historyList.prepend(historyItem);
       hideOverlays();
       showOverlay("summary");
+      if (returnPhotoUrl) URL.revokeObjectURL(returnPhotoUrl);
+      returnPhotoUrl = null;
     }
 
     function openProfile() {
@@ -710,8 +906,27 @@
     scrim.addEventListener("click", closeSheet);
     document.getElementById("start-trip").addEventListener("click", startTrip);
     document.getElementById("cancel-reservation").addEventListener("click", () => cancelReservation());
-    document.getElementById("pause-trip").addEventListener("click", togglePause);
-    document.getElementById("end-trip").addEventListener("click", endTrip);
+    document.getElementById("temporary-parking").addEventListener("click", toggleTemporaryParking);
+    document.getElementById("return-vehicle").addEventListener("click", beginReturn);
+    document.getElementById("return-parking").addEventListener("change", updateReturnRequirements);
+    document.getElementById("continue-to-photo").addEventListener("click", () => {
+      if (!document.getElementById("continue-to-photo").disabled) setReturnStep(2);
+    });
+    document.getElementById("return-photo").addEventListener("change", selectReturnPhoto);
+    document.getElementById("continue-to-checklist").addEventListener("click", () => {
+      if (!document.getElementById("continue-to-checklist").disabled) setReturnStep(3);
+    });
+    document.getElementById("back-to-location").addEventListener("click", () => setReturnStep(1));
+    document.getElementById("confirm-belongings").addEventListener("change", updateReturnRequirements);
+    document.getElementById("lock-vehicle").addEventListener("click", lockVehicle);
+    document.getElementById("confirm-return").addEventListener("click", completeTrip);
+    document.getElementById("back-to-photo").addEventListener("click", () => {
+      isVehicleLocked = false;
+      document.getElementById("return-lock-status").classList.add("hidden");
+      setReturnStep(2);
+      updateReturnRequirements();
+    });
+    document.getElementById("back-to-trip").addEventListener("click", leaveReturnFlow);
     document.getElementById("back-to-map").addEventListener("click", () => { hideOverlays(); showMap(); });
     document.querySelectorAll("[data-close=reservation]").forEach((button) => button.addEventListener("click", () => cancelReservation()));
     document.getElementById("profile-button").addEventListener("click", openProfile);
@@ -726,6 +941,8 @@
       searchQuery = event.target.value.trim();
       showMap();
       applyGreekTranslations();
+      applyGreekTranslations();
+      resetReturnFlow();
       renderVehicles();
     });
     document.querySelectorAll(".filter-button").forEach((button) => {
