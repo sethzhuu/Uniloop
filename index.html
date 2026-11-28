@@ -94,6 +94,9 @@
     .marker-icon { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border-radius: 6px; background: #edf3e6; color: var(--green); }
     .marker-price { font-family: var(--mono); font-size: 11px; font-weight: 500; white-space: nowrap; }
     .marker-price small { color: var(--muted); font-family: var(--sans); font-size: 8px; }
+    .marker-copy { display: grid; min-width: 0; gap: 2px; text-align: left; }
+    .marker-copy strong { overflow: hidden; max-width: 110px; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .marker-copy small { color: var(--muted); font-size: 9px; }
     .location-dot { position: absolute; z-index: 4; top: 55%; left: 46%; display: grid; width: 19px; height: 19px; place-items: center; border: 3px solid #fff; border-radius: 50%; background: #5485d4; box-shadow: 0 1px 5px #17291a50; }
     .location-dot::after { position: absolute; width: 38px; height: 38px; border: 1px solid #5485d44f; border-radius: 50%; content: ""; }
     .map-controls { position: absolute; z-index: 4; right: 22px; bottom: 90px; display: grid; overflow: hidden; border: 1px solid #e4e6de; border-radius: 7px; background: #fff; box-shadow: 0 3px 12px #24372d0b; }
@@ -120,7 +123,22 @@
     .car-price small { color: var(--muted); font-family: var(--sans); font-size: 9px; }
     .side-foot { display: flex; margin-top: auto; padding: 15px 19px; justify-content: space-between; border-top: 1px solid var(--line); color: var(--muted); font-size: 9px; }
     .side-foot strong { color: var(--ink); font-weight: 600; }
-    .mobile-nav { display: none; }
+    .mobile-nav {
+      position: fixed;
+      z-index: 11;
+      bottom: max(8px, env(safe-area-inset-bottom));
+      left: 50%;
+      display: grid;
+      width: min(480px, calc(100vw - 32px));
+      min-height: 66px;
+      padding: 7px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      transform: translateX(-50%);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fffffff5;
+      backdrop-filter: blur(12px);
+    }
     .empty-state { padding: 42px 12px; color: var(--muted); font-size: 12px; line-height: 1.7; text-align: center; }
     .scrim { position: fixed; z-index: 12; inset: 0; background: #10251c70; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
     .scrim.visible { opacity: 1; pointer-events: auto; }
@@ -280,12 +298,537 @@
       .specs { margin: 11px 0; padding: 9px 0; }
       .sheet-notice { margin-bottom: 9px; }
     }
+    .help-tour-button {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      padding: 0;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--green);
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .tour-highlight {
+      position: fixed;
+      z-index: 210;
+      border: 2px solid var(--green);
+      border-radius: 16px;
+      box-shadow: 0 0 0 9999px rgba(17, 24, 39, 0.55), 0 10px 30px rgba(17, 24, 39, 0.18);
+      pointer-events: none;
+      transition: left .22s ease, top .22s ease, width .22s ease, height .22s ease;
+    }
+    .coach-mark {
+      position: fixed;
+      z-index: 211;
+      width: min(360px, calc(100vw - 24px));
+      padding: 18px;
+      border: 1px solid var(--green);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 12px 36px rgba(17, 24, 39, 0.16);
+    }
+    .coach-mark-header { display: flex; min-height: 28px; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .coach-progress { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .coach-skip { min-height: 28px; padding: 0 4px; border: 0; background: transparent; color: var(--green); font-size: 11px; font-weight: 800; cursor: pointer; }
+    .coach-mark h2 { margin: 10px 0 7px; color: var(--ink); font-size: 17px; line-height: 1.3; }
+    .coach-mark p { margin: 0 0 14px; color: var(--muted); font-size: 12px; line-height: 1.62; }
+    .coach-next { min-height: 46px; border-radius: 12px; font-size: 12px; }
+    @media (max-width: 760px) {
+      .header-meta { gap: 6px; }
+      .help-tour-button { width: 32px; height: 32px; }
+      .coach-mark { padding: 15px; }
+      .coach-mark h2 { font-size: 15px; }
+      .coach-mark p { font-size: 11px; }
+    }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
     }
+    :root {
+      --ink: #1f2937;
+      --muted: #667085;
+      --line: #e5e7eb;
+      --canvas: #f5f6f3;
+      --paper: #fff;
+      --green: #287d4b;
+      --green-soft: #edf5ef;
+      --lime: #d7ef6b;
+      --shadow-soft: none;
+      scroll-behavior: smooth;
+    }
+    body { color: var(--ink); background: var(--canvas); }
+    button { -webkit-tap-highlight-color: transparent; }
+    .workspace {
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: calc(100vh - 76px);
+      background: var(--canvas);
+    }
+    .home-dashboard {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 18px;
+      padding: 22px clamp(22px, 4vw, 58px) 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--canvas);
+    }
+    .dashboard-welcome { display: flex; min-height: 100px; align-items: center; justify-content: space-between; gap: 20px; }
+    .dashboard-intro { min-width: 0; }
+    .dashboard-intro .eyebrow { margin-bottom: 7px; color: var(--green); letter-spacing: 1.15px; }
+    .dashboard-intro h1 { display: grid; gap: 1px; margin: 0; color: var(--ink); font-size: clamp(24px, 3vw, 33px); font-weight: 800; letter-spacing: -1.1px; line-height: 1.14; }
+    .dashboard-intro h1 em { color: var(--green); font-style: normal; }
+    .dashboard-intro > p:last-child { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
+    .dashboard-car { display: grid; width: clamp(130px, 17vw, 205px); height: 91px; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 16px; background: #f0f1ed; }
+    .dashboard-car svg { width: 90%; height: auto; color: var(--green); }
+    .dashboard-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .dashboard-stat {
+      display: flex;
+      min-width: 0;
+      min-height: 76px;
+      padding: 13px 15px;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .2s;
+    }
+    .dashboard-stat:hover { transform: translateY(-1px); border-color: #b7cdbd; background: #fcfdfb; }
+    .stat-icon { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; border-radius: 12px; background: #eff5dd; color: #638133; font-size: 22px; }
+    .membership-icon { background: var(--green-soft); color: var(--green); }
+    .vehicles-icon { background: #f0f1ed; color: #56636d; }
+    .stat-copy { display: grid; min-width: 0; gap: 3px; }
+    .stat-copy small { overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .stat-copy strong { overflow: hidden; color: var(--ink); font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .stat-arrow { margin-left: auto; color: #98a29a; }
+    .stars-stat .stat-copy strong { color: var(--green); font-size: 20px; }
+    .workspace.dashboard-hidden .home-dashboard { display: none; }
+    .workspace.dashboard-hidden { grid-template-rows: minmax(0, 1fr); }
+    .topbar {
+      min-height: 76px;
+      padding-inline: clamp(18px, 3.2vw, 52px);
+      box-shadow: 0 2px 12px #163c2908;
+    }
+    .brand-mark { width: 39px; height: 39px; border-radius: 13px; box-shadow: inset 0 0 0 1px #163c2910; }
+    .brand-name { font-size: 20px; letter-spacing: -.5px; }
+    .campus-symbol { background: var(--green-soft); }
+    .search { min-height: 44px; border-radius: 13px; background: #f8f9f5; transition: border-color .2s, box-shadow .2s, background .2s; }
+    .search:focus-within { border-color: #9eb69b; background: #fff; box-shadow: 0 0 0 4px #174e3810; }
+    .avatar { width: 38px; height: 38px; border: 0; background: var(--green); color: #fff; }
+    .workspace { grid-template-columns: minmax(0, 1fr) minmax(340px, 390px); }
+    .map { background: #eff2e7; }
+    .map-art { background-color: #eff2e7; }
+    .road { border-radius: 99px; }
+    .building { border-radius: 10px; background: #fffdf5; box-shadow: 0 5px 16px #45573612; }
+    .map-label, .map-filter, .map-controls {
+      border-color: #e4e9e1;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px #172f2612;
+    }
+    .map-label { padding: 11px 14px; }
+    .map-filter { padding: 4px; }
+    .filter-button { min-height: 34px; padding-inline: 13px; border-radius: 10px; transition: background .2s, color .2s, transform .2s; }
+    .filter-button.active { background: var(--green); color: #fff; box-shadow: 0 3px 8px #174e382c; }
+    .filter-button:active, .nav-button:active { transform: scale(.96); }
+    .map-marker { min-width: 145px; min-height: 48px; padding: 5px 9px 5px 5px; border-radius: 12px; box-shadow: none; transition: transform .2s, border-color .2s, box-shadow .2s; }
+    .map-marker:hover, .map-marker.selected { border-color: #83a16f; box-shadow: 0 10px 24px #173a2924; }
+    .marker-icon { border-radius: 10px; background: var(--green-soft); }
+    .location-dot { box-shadow: 0 2px 8px #17291a50; }
+    .map-control { width: 42px; height: 42px; }
+    .side-panel { box-shadow: -8px 0 28px #173a2908; }
+    .panel-heading { min-height: 92px; padding: 22px 23px 17px; }
+    .panel-heading h1 { font-size: 21px; letter-spacing: -.45px; }
+    .available { padding: 8px 10px; border-radius: 99px; background: #f0f5e9; color: var(--green); }
+    .available i { box-shadow: 0 0 0 4px #8cb45420; }
+    .vehicle-list { padding: 10px 14px 20px; }
+    .vehicle-card {
+      grid-template-columns: 67px minmax(0, 1fr) auto;
+      gap: 12px;
+      margin: 5px 0;
+      padding: 13px 10px;
+      border: 1px solid transparent;
+      border-radius: 17px;
+      transition: background .2s, border-color .2s, transform .2s, box-shadow .2s;
+    }
+    .vehicle-card:hover { transform: translateY(-1px); border-color: var(--line); background: #fff; box-shadow: var(--shadow-soft); }
+    .car-thumb { width: 67px; height: 58px; border-radius: 13px; background: #eef3e7; }
+    .car-info { gap: 6px; }
+    .car-info strong { font-size: 13px; letter-spacing: -.15px; }
+    .car-info span { font-size: 10px; }
+    .car-info span b { color: var(--green); }
+    .car-battery { display: block; width: min(100%, 150px); height: 4px; overflow: hidden; border-radius: 99px; background: #e8ede5; }
+    .car-battery i { display: block; height: 100%; border-radius: inherit; background: #8dbb54; }
+    .car-price { padding-top: 2px; color: var(--green); font-size: 13px; }
+    .side-foot { padding: 16px 21px; background: #fbfcf9; }
+    .vehicle-sheet {
+      top: 50%;
+      right: auto;
+      bottom: auto;
+      left: 50%;
+      width: min(660px, calc(100vw - 48px));
+      max-height: min(790px, calc(100dvh - 112px));
+      padding: 25px 32px 28px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: none;
+      opacity: 0;
+      transform: translate(-50%, calc(-50% + 15px));
+      pointer-events: none;
+      transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .2s;
+    }
+    .vehicle-sheet.open { opacity: 1; transform: translate(-50%, -50%); pointer-events: auto; }
+    .sheet-back { display: inline-flex; min-height: 40px; padding: 0; align-items: center; gap: 8px; border: 0; background: transparent; color: var(--green); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .sheet-top { min-height: 42px; }
+    .sheet-car-art { height: 188px; margin: 13px 0 17px; border: 1px solid var(--line); border-radius: 16px; background: #f0f1ed; }
+    .sheet-car-art svg { width: min(300px, 80%); height: 154px; }
+    .sheet-title-row { justify-content: center; text-align: center; }
+    .sheet-title-row h2 { font-size: 25px; letter-spacing: -.45px; }
+    .sheet-title-row p { font-size: 12px; }
+    .vehicle-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 19px 0 12px; }
+    .vehicle-metric { display: grid; min-height: 104px; padding: 14px 16px; align-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+    .metric-label { color: var(--muted); font-size: 11px; }
+    .vehicle-metric > strong { color: var(--ink); font-family: var(--sans); font-size: 27px; font-weight: 800; letter-spacing: -.6px; }
+    .metric-progress { display: block; height: 5px; overflow: hidden; border-radius: 99px; background: #e8eee8; }
+    .metric-progress i { display: block; height: 100%; border-radius: inherit; background: var(--green); }
+    .vehicle-metric .sheet-price { color: var(--green); font-size: 23px; letter-spacing: -.4px; white-space: nowrap; }
+    .vehicle-metric .sheet-price small { color: var(--muted); font-size: 11px; }
+    .specs { display: grid; margin: 11px 0 16px; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .spec strong { color: var(--ink); font-family: var(--sans); font-size: 14px; font-weight: 700; }
+    .primary-button {
+      min-height: 52px;
+      border-radius: 14px;
+      background: var(--green);
+      box-shadow: none;
+      transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    .primary-button:hover:not(:disabled) { transform: translateY(-1px); background: #206940; box-shadow: none; }
+    .secondary-button { min-height: 44px; border-radius: 12px; }
+    .icon-button { width: 38px; height: 38px; border-radius: 12px; }
+    .scrim { backdrop-filter: blur(3px); }
+    .overlay { backdrop-filter: blur(5px); }
+    .dialog {
+      width: min(100%, 440px);
+      padding: 31px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: none;
+    }
+    .dialog h2 { letter-spacing: -.55px; line-height: 1.25; }
+    .dialog-kicker { color: #55705e; }
+    .timer { font-size: 61px; font-weight: 500; }
+    .trip-status { border-radius: 99px; background: #f4f7f0; color: var(--green); }
+    .trip-cost { color: var(--green); font-size: 52px; letter-spacing: -1px; }
+    .trip-actions .primary-button { background: var(--green); box-shadow: none; }
+    .trip-actions .primary-button:hover:not(:disabled) { background: #206940; }
+    .pause-button { min-height: 50px; border-radius: 13px; transition: border-color .2s, background .2s, transform .2s; }
+    .pause-button:hover:not(:disabled) { transform: translateY(-1px); border-color: #bac9b6; background: #f8faf6; }
+    .reservation-note, .return-feedback { border-radius: 12px; }
+    .return-field select { min-height: 48px; border-radius: 12px; }
+    .return-rewards { gap: 11px; padding: 15px; border-radius: 14px; }
+    .return-reward-option { padding: 5px; }
+    .return-reward-option input, .return-check-option input { width: 18px; height: 18px; flex: 0 0 auto; }
+    .return-photo {
+      min-height: 116px;
+      padding: 12px;
+      border: 1.5px dashed #b6c8af;
+      border-radius: 16px;
+      background: #f8faf5;
+    }
+    .return-photo input { min-height: 46px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+    .return-photo-preview { max-height: 230px; border-radius: 12px; }
+    .return-check-option { padding: 15px; border-radius: 14px; background: #f9faf7; }
+    .return-policy { padding: 12px 13px; border: 1px solid #f0dfc6; border-radius: 12px; background: #fff9ef; color: #6c573e; }
+    .return-policy::before { content: "⚠  "; color: #b17527; font-size: 13px; }
+    .summary-icon { width: 49px; height: 49px; background: var(--lime); }
+    .summary-total { padding-block: 17px; }
+    .profile-page { padding: 40px 24px 105px; }
+    .profile-content { width: min(100%, 900px); }
+    .profile-content > h1 { font-size: 31px; letter-spacing: -.7px; }
+    .profile-card, .profile-stats { border-color: var(--line); border-radius: 16px; box-shadow: none; }
+    .profile-card { padding: 23px; }
+    .profile-avatar { width: 54px; height: 54px; background: var(--green); color: #fff; }
+    .profile-stats { overflow: hidden; }
+    .profile-stat { padding: 19px 10px; }
+    .profile-stat strong { color: var(--green); font-size: 20px; }
+    .profile-row { min-height: 54px; padding-inline: 16px; }
+    .profile-history .profile-row { border: 1px solid var(--line); border-radius: 12px; }
+    .reward-center { margin: 16px 0 0; padding: 17px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+    .reward-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .reward-heading h2 { margin: 0; color: var(--ink); font-size: 18px; }
+    .reward-heading > strong { color: var(--green); font-size: 12px; }
+    .reward-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 13px; }
+    .reward-option { display: flex; min-height: 72px; padding: 11px; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: 12px; background: #fafbf8; }
+    .reward-option-icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--green-soft); color: var(--green); font-size: 14px; font-weight: 800; }
+    .reward-option strong { display: block; color: var(--ink); font-size: 11px; }
+    .reward-option p { margin: 3px 0 0; color: var(--muted); font-size: 9px; }
+    .toast { border-radius: 14px; }
+    .mobile-nav { display: none; }
+    @media (min-width: 1100px) {
+      .workspace { grid-template-columns: minmax(0, 1fr) 390px; }
+      .map { min-height: max(500px, calc(100dvh - 300px)); }
+      .vehicle-sheet { right: auto; }
+    }
+    @media (max-width: 760px) {
+      .topbar { min-height: 60px; padding-inline: 15px; }
+      .workspace { min-height: 0; }
+      .map-label, .map-filter { top: 14px; }
+      .map-filter { right: 12px; }
+      .filter-button { min-height: 32px; border-radius: 9px; }
+      .map-marker { min-height: 44px; border-radius: 13px; }
+      .map-controls { bottom: calc(78px + env(safe-area-inset-bottom)); border-radius: 13px; }
+      .map-control { width: 40px; height: 40px; }
+      .home-dashboard { position: absolute; z-index: 6; top: 9px; right: 10px; left: 10px; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: #f5f6f3f5; }
+      .dashboard-welcome { min-height: 76px; gap: 8px; }
+      .dashboard-intro .eyebrow { margin-bottom: 4px; font-size: 8px; }
+      .dashboard-intro h1 { font-size: clamp(18px, 5vw, 23px); letter-spacing: -.7px; }
+      .dashboard-intro > p:last-child { max-width: 275px; margin-top: 4px; font-size: 10px; line-height: 1.4; }
+      .dashboard-car { width: 96px; height: 60px; border-radius: 12px; }
+      .dashboard-stats { gap: 6px; }
+      .dashboard-stat { min-height: 58px; padding: 7px; gap: 6px; border-radius: 12px; }
+      .stat-icon { width: 28px; height: 28px; border-radius: 9px; font-size: 17px; }
+      .stat-copy { gap: 2px; }
+      .stat-copy small { font-size: 8px; }
+      .stat-copy strong, .stars-stat .stat-copy strong { font-size: 11px; }
+      .stat-arrow { display: none; }
+      .workspace.dashboard-hidden .home-dashboard { display: none; }
+      .nav-button { min-width: 0; min-height: 48px; gap: 4px; border-radius: 13px; font-size: 10px; transition: color .18s, background .18s, transform .18s; }
+      .nav-button svg { width: 20px; height: 20px; }
+      .nav-button.active { background: #edf4e9; color: var(--green); font-weight: 700; }
+      .side-panel { display: none; }
+      body.garage-open .side-panel {
+        position: fixed;
+        z-index: 10;
+        inset: 60px 0 calc(68px + env(safe-area-inset-bottom));
+        display: flex;
+        border: 0;
+        border-radius: 22px 22px 0 0;
+        box-shadow: 0 -10px 35px #173a2920;
+        animation: page-in .22s ease both;
+      }
+      .panel-heading { min-height: 82px; padding: 17px 19px 13px; }
+      .vehicle-list { padding: 8px 14px 18px; }
+      .vehicle-card { padding: 13px 10px; }
+      .map-label { top: 218px; }
+      .map-filter { top: 263px; }
+      .map-controls { bottom: calc(83px + env(safe-area-inset-bottom)); }
+      .vehicle-sheet, .vehicle-sheet.open {
+        top: 8px;
+        right: 8px;
+        bottom: calc(77px + env(safe-area-inset-bottom));
+        left: 8px;
+        width: auto;
+        max-height: none;
+        padding: 13px 18px 19px;
+        border-radius: 16px;
+        transform: translateY(15px);
+      }
+      .vehicle-sheet.open { transform: translateY(0); }
+      .sheet-car-art { height: clamp(108px, 23vh, 166px); margin: 8px 0 12px; border-radius: 14px; }
+      .sheet-car-art svg { height: 96%; }
+      .sheet-title-row h2 { font-size: 21px; }
+      .vehicle-metrics { gap: 8px; margin: 13px 0 8px; }
+      .vehicle-metric { min-height: 84px; padding: 10px 12px; gap: 5px; border-radius: 13px; }
+      .vehicle-metric > strong { font-size: 23px; }
+      .vehicle-metric .sheet-price { font-size: 18px; }
+      .specs { margin: 8px 0 11px; padding: 8px 0; }
+      .dialog { padding: 25px; border-radius: 16px; }
+      .profile-page { inset: 60px 0 0; padding: 32px 18px calc(92px + env(safe-area-inset-bottom)); }
+      .profile-content > h1 { font-size: 27px; }
+      .reward-options { grid-template-columns: 1fr; }
+      .toast { right: 12px; bottom: calc(78px + env(safe-area-inset-bottom)); }
+    }
+    @media (max-width: 430px) {
+      .topbar { gap: 8px; padding-right: 10px; padding-left: 10px; }
+      .map-label { top: 218px; left: 12px; max-width: calc(100% - 24px); }
+      .map-filter { top: 263px; right: auto; left: 12px; }
+      .filter-button { padding-inline: 11px; }
+      .profile-card { padding: 17px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+    .welcome-screen {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      min-height: 100dvh;
+      overflow: auto;
+      padding: 34px 24px 28px;
+      place-items: center;
+      background: var(--canvas);
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    .welcome-screen.hidden {
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+    }
+    .welcome-active .app { display: none; }
+    .welcome-content { width: min(620px, 100%); text-align: center; }
+    .welcome-brand { display: inline-flex; align-items: center; justify-content: center; gap: 9px; color: var(--ink); font-size: 20px; font-weight: 800; letter-spacing: -.5px; }
+    .welcome-brand-mark { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 13px; background: var(--lime); color: var(--ink); font-size: 18px; }
+    .welcome-brand-star { color: var(--green); font-size: 18px; }
+    .welcome-art { display: grid; width: min(300px, 68vw); height: 150px; margin: 14px auto 10px; place-items: center; border: 1px solid var(--line); border-radius: 16px; background: #efeee8; }
+    .welcome-art svg { width: 88%; height: auto; color: var(--green); }
+    .welcome-headline { display: grid; gap: 2px; margin: 0; color: var(--ink); font-size: clamp(34px, 6vw, 52px); font-weight: 800; letter-spacing: -2.2px; line-height: .98; }
+    .welcome-headline em { color: var(--green); font-style: normal; }
+    .welcome-subtitle { max-width: 470px; margin: 12px auto 14px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+    .welcome-actions { width: min(420px, 100%); margin: 0 auto; }
+    .welcome-start { min-height: 56px; border-radius: 12px; font-size: 15px; }
+    .welcome-links { display: grid; gap: 1px; margin-top: 10px; }
+    .welcome-link { min-height: 42px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
+    .welcome-link:hover { color: var(--green); background: #fff9; }
+    .welcome-rules {
+      position: fixed;
+      z-index: 101;
+      inset: 0;
+      display: grid;
+      padding: 18px;
+      place-items: center;
+      background: #1f293765;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+    .welcome-rules.open { opacity: 1; pointer-events: auto; }
+    .welcome-rules-card { width: min(460px, 100%); max-height: calc(100dvh - 36px); overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+    .welcome-rules-card h2 { margin: 8px 0 18px; color: var(--ink); font-size: 24px; letter-spacing: -.7px; }
+    .welcome-rules-list { display: grid; gap: 9px; }
+    .welcome-rule { padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: #fafbf8; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .welcome-rule strong { display: block; margin-bottom: 3px; color: var(--green); font-size: 13px; }
+    .welcome-rules-close { width: 100%; margin-top: 14px; }
+    .welcome-screen { position: fixed; }
+    .welcome-skip {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .welcome-onboarding {
+      width: min(520px, 100%);
+      min-height: 126px;
+      margin: 14px auto;
+      padding: 16px 18px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+    }
+    .welcome-stage { display: none; gap: 12px; grid-template-columns: 48px minmax(0, 1fr); align-items: center; text-align: left; }
+    .welcome-stage.active { display: grid; }
+    .stage-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 14px; background: var(--green-soft); color: var(--green); font-size: 22px; }
+    .stage-copy strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 17px; line-height: 1.25; }
+    .stage-copy span { display: block; color: var(--muted); font-size: 14px; line-height: 1.45; }
+    .welcome-dots { display: flex; margin-top: 12px; justify-content: center; gap: 7px; }
+    .welcome-dot { width: 6px; height: 6px; padding: 0; border: 0; border-radius: 99px; background: #cfd5cf; transition: width .2s, background .2s; }
+    .welcome-dot.active { width: 20px; background: var(--green); }
+    @media (max-height: 760px) {
+      .welcome-screen { padding-block: 22px 18px; }
+      .welcome-art { height: 112px; margin-block: 8px; }
+      .welcome-art svg { max-height: 104px; }
+      .welcome-headline { font-size: clamp(30px, 5.5vw, 42px); }
+      .welcome-subtitle { margin-block: 8px 10px; }
+      .welcome-start { min-height: 50px; }
+      .welcome-link { min-height: 36px; }
+    }
+    @media (max-width: 760px) {
+      .welcome-screen { align-items: start; padding: 58px 14px 18px; }
+      .welcome-skip { top: 12px; right: 12px; min-height: 36px; }
+      .welcome-brand { font-size: 18px; }
+      .welcome-art { height: 108px; width: min(260px, 70vw); margin: 8px auto; }
+      .welcome-art svg { max-height: 100px; }
+      .welcome-headline { font-size: clamp(28px, 9vw, 38px); letter-spacing: -1.5px; }
+      .welcome-subtitle { margin: 8px auto 10px; font-size: 13px; }
+      .welcome-onboarding { min-height: 142px; margin: 10px auto 12px; padding: 14px 12px 10px; }
+      .welcome-stage { grid-template-columns: 42px minmax(0, 1fr); gap: 9px; }
+      .stage-icon { width: 42px; height: 42px; font-size: 20px; }
+      .stage-copy strong { font-size: 15px; }
+      .stage-copy span { font-size: 12.5px; line-height: 1.42; }
+      .welcome-dots { margin-top: 10px; }
+      .welcome-start { min-height: 52px; font-size: 14px; }
+      .welcome-link { min-height: 38px; }
+    }
   </style>
 </head>
-<body>
+<body class="welcome-active">
+  <section class="welcome-screen" id="welcome-screen" aria-labelledby="welcome-title">
+    <button class="welcome-skip" id="welcome-skip" type="button">Skip Tour</button>
+    <div class="welcome-content">
+      <div class="welcome-brand" aria-label="UniLoop">
+        <span class="welcome-brand-mark" aria-hidden="true">u</span>
+        <span>uni<span style="color:var(--green)">loop</span></span>
+        <span class="welcome-brand-star" aria-hidden="true">✦</span>
+      </div>
+      <div class="welcome-art" aria-hidden="true">
+        <svg viewBox="0 0 240 120" fill="none">
+          <path d="M30 78c3-10 11-16 21-19l22-7 18-21c4-5 9-7 17-7h50c8 0 14 4 19 11l15 22 17 7c7 3 11 8 13 16v13H29l1-15Z" fill="#e8b4a5" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+          <path d="m82 50 16-19c2-3 6-4 10-4h21v23H82Zm53-23h22c5 0 10 3 13 8l11 15h-46V27Z" fill="#fff" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M31 70h40m112 0h22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="67" cy="88" r="12" fill="#26352e" stroke="#fff" stroke-width="3"/>
+          <circle cx="187" cy="88" r="12" fill="#26352e" stroke="#fff" stroke-width="3"/>
+          <path d="M96 68h21m-10-10v20" stroke="#287d4b" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="welcome-headline" id="welcome-title"><span>Μια πιο εύκολη</span><em>διαδρομή</em><span>ξεκινά εδώ.</span></h1>
+      <div class="welcome-onboarding" aria-live="polite">
+        <div class="welcome-stage active" data-stage="0"><span class="stage-icon" aria-hidden="true">⌖</span><span class="stage-copy"><strong>1. Επιλέξτε και κρατήστε</strong><span>Δείτε κοντινά οχήματα στον χάρτη και κρατήστε το αγαπημένο σας για 10 λεπτά.</span></span></div>
+        <div class="welcome-stage" data-stage="1"><span class="stage-icon" aria-hidden="true">↗</span><span class="stage-copy"><strong>2. Ξεκλειδώστε και οδηγήστε</strong><span>Στο όχημα, πατήστε Unlock και ξεκινήστε την εικονική διαδρομή.</span></span></div>
+        <div class="welcome-stage" data-stage="2"><span class="stage-icon" aria-hidden="true">Ⅱ</span><span class="stage-copy"><strong>3. Προσωρινή στάθμευση</strong><span>Διαθέτετε έως 10 λεπτά συνολικά · η χρέωση συνεχίζεται κατά τη διάρκεια της στάσης.</span></span></div>
+        <div class="welcome-stage" data-stage="3"><span class="stage-icon" aria-hidden="true">✦</span><span class="stage-copy"><strong>4. Επιστρέψτε &amp; κερδίστε αστέρια</strong><span>Ανανεώστε φωτογραφία πινακίδας και θέσης· κερδίστε +10 αστέρια σε επιλέξιμο σημείο επιστροφής. Στα 50 αστέρια: €2 έκπτωση ή 5 λεπτά προτεραιότητα αναμονής.</span></span></div>
+        <div class="welcome-dots" aria-label="Επίπεδα εισαγωγής">
+          <button class="welcome-dot active" type="button" data-dot="0" aria-label="Βήμα 1"></button>
+          <button class="welcome-dot" type="button" data-dot="1" aria-label="Βήμα 2"></button>
+          <button class="welcome-dot" type="button" data-dot="2" aria-label="Βήμα 3"></button>
+          <button class="welcome-dot" type="button" data-dot="3" aria-label="Βήμα 4"></button>
+        </div>
+      </div>
+      <p class="welcome-subtitle">Κοινόχρηστα αυτοκίνητα για την πανεπιστημιούπολη Πατησίων, με απλή κράτηση και επιστροφή.</p>
+      <div class="welcome-actions">
+        <button class="primary-button welcome-start" id="welcome-start" type="button"><span id="welcome-start-label">Επόμενο →</span></button>
+        <div class="welcome-links">
+          <button class="welcome-link" id="welcome-login" type="button">Σύνδεση</button>
+          <button class="welcome-link" id="welcome-rules-open" type="button">Χρήση UniLoop · κανόνες &amp; διαδικασία</button>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="welcome-rules" id="welcome-rules" role="dialog" aria-modal="true" aria-labelledby="welcome-rules-title">
+    <div class="welcome-rules-card">
+      <p class="dialog-kicker">UNILOOP · ΟΔΗΓΟΣ ΧΡΗΣΗΣ</p>
+      <h2 id="welcome-rules-title">Κανόνες &amp; διαδικασία</h2>
+      <div class="welcome-rules-list">
+        <div class="welcome-rule"><strong>1. Κράτηση 10 λεπτών</strong>Κρατήστε ένα διαθέσιμο όχημα και μετακινηθείτε σε αυτό εντός 10 λεπτών.</div>
+        <div class="welcome-rule"><strong>2. Προσωρινή στάθμευση</strong>Το όριο προσωρινής στάθμευσης είναι 10 λεπτά ανά διαδρομή.</div>
+        <div class="welcome-rule"><strong>3. Φωτογράφηση επιστροφής</strong>Για την επιστροφή απαιτούνται φωτογραφίες της πινακίδας και της θέσης στάθμευσης.</div>
+        <div class="welcome-rule"><strong>4. Επιστροφή σε επιτρεπόμενη ζώνη</strong>Το όχημα επιστρέφεται μόνο σε νόμιμη δημόσια θέση σε επιτρεπόμενη ζώνη.</div>
+        <div class="welcome-rule"><strong>5. Κέρδος αστέρων</strong>Επιλέξιμα σημεία επιστροφής δίνουν +10 αστέρια. Συλλέξτε 50 αστέρια για έκπτωση €2 ή προτεραιότητα αναμονής 5 λεπτών σε ώρες αιχμής.</div>
+      </div>
+      <button class="primary-button welcome-rules-close" id="welcome-rules-close" type="button">Κατανοητό</button>
+    </div>
+  </section>
+  <div class="tour-highlight hidden" id="tour-highlight" aria-hidden="true"></div>
+  <section class="coach-mark hidden" id="coach-mark" role="dialog" aria-modal="false" aria-live="polite" aria-labelledby="coach-title">
+    <div class="coach-mark-header">
+      <span class="coach-progress" id="coach-progress">Step 1 of 6</span>
+      <button class="coach-skip" id="coach-skip" type="button">Skip Tour</button>
+    </div>
+    <h2 id="coach-title"></h2>
+    <p id="coach-copy"></p>
+    <button class="primary-button coach-next" id="coach-next" type="button"><span id="coach-next-label">Next →</span></button>
+  </section>
   <div class="app">
     <header class="topbar">
       <button class="brand" id="home-button" type="button" aria-label="UniLoop map home" data-i18n-aria="brandHome">
@@ -306,11 +849,35 @@
       </label>
       <div class="header-meta">
         <span class="credits"><span data-i18n="ridePoints">Ride points</span> <strong id="credit-count">120</strong></span>
+        <button class="help-tour-button" id="help-tour" type="button" aria-label="Help and replay guide">?</button>
         <button class="avatar" id="profile-button" type="button" aria-label="Άνοιγμα προφίλ" data-i18n-aria="profileOpen">Α</button>
       </div>
     </header>
 
     <main class="workspace" id="workspace">
+      <section class="home-dashboard" aria-label="UniLoop dashboard">
+        <div class="dashboard-welcome">
+          <div class="dashboard-intro">
+            <p class="eyebrow" data-i18n="dashboardGreeting">ΚΑΛΩΣ ΗΡΘΕΣ ΣΤΟ UNILOOP</p>
+            <h1><span data-i18n="dashboardTitle">Μια πιο εύκολη διαδρομή</span><em data-i18n="dashboardHighlight">ξεκινά εδώ.</em></h1>
+            <p data-i18n="dashboardSubtitle">Ανακάλυψε τα διαθέσιμα οχήματα κοντά στην πανεπιστημιούπολη.</p>
+          </div>
+          <div class="dashboard-car" aria-hidden="true">
+            <svg viewBox="0 0 240 120" fill="none"><path d="M30 78c3-10 11-16 21-19l22-7 18-21c4-5 9-7 17-7h50c8 0 14 4 19 11l15 22 17 7c7 3 11 8 13 16v13H29l1-15Z" fill="#e8b4a5" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="m82 50 16-19c2-3 6-4 10-4h21v23H82Zm53-23h22c5 0 10 3 13 8l11 15h-46V27Z" fill="#fff" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="67" cy="88" r="12" fill="#26352e" stroke="#fff" stroke-width="3"/><circle cx="187" cy="88" r="12" fill="#26352e" stroke="#fff" stroke-width="3"/></svg>
+          </div>
+        </div>
+        <div class="dashboard-stats" id="dashboard-stats">
+          <button class="dashboard-stat stars-stat" id="dashboard-stars" type="button">
+            <span class="stat-icon" aria-hidden="true">✦</span><span class="stat-copy"><small data-i18n="ridePoints">Αστέρια</small><strong id="dashboard-star-count">120</strong></span><span class="stat-arrow" aria-hidden="true">→</span>
+          </button>
+          <button class="dashboard-stat" id="dashboard-membership" type="button">
+            <span class="stat-icon membership-icon" aria-hidden="true">✓</span><span class="stat-copy"><small data-i18n="identityLabel">Φοιτητική ταυτοποίηση</small><strong data-i18n="identityValue">Μόνο επίδειξη · χωρίς σύνδεση</strong></span><span class="stat-arrow" aria-hidden="true">→</span>
+          </button>
+          <button class="dashboard-stat" id="dashboard-vehicles" type="button">
+            <span class="stat-icon vehicles-icon" aria-hidden="true">⌖</span><span class="stat-copy"><small data-i18n="dashboardAvailable">Κοντά σου τώρα</small><strong><span id="dashboard-car-count">6</span> <span data-i18n="carsAvailable">διαθέσιμα</span></strong></span><span class="stat-arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
       <section class="map" id="map-view" aria-label="Athens campus vehicle map" data-i18n-aria="mapLabel">
         <div class="map-art" aria-hidden="true">
           <div class="green-space green-one"></div><div class="green-space green-two"></div>
@@ -340,19 +907,9 @@
           </button>
         </div>
         <span class="map-scale" id="map-scale">200 m</span>
-        <nav class="mobile-nav" aria-label="Main navigation" data-i18n-aria="navigation">
-          <button class="nav-button active" id="nav-map" type="button">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 3v15m6-12v15" stroke="currentColor" stroke-width="1.7"/></svg>
-            <span data-i18n="navFindCar">Αυτοκίνητα</span>
-          </button>
-          <button class="nav-button" id="nav-profile" type="button">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-            <span data-i18n="navProfile">Προφίλ</span>
-          </button>
-        </nav>
       </section>
 
-      <aside class="side-panel" aria-label="Nearby vehicles" data-i18n-aria="nearbyLabel">
+      <aside class="side-panel" id="nearby-panel" aria-label="Nearby vehicles" data-i18n-aria="nearbyLabel">
         <div class="panel-heading">
           <div><p class="eyebrow" data-i18n="nearbyEyebrow">NEARBY VEHICLES</p><h1 data-i18n="nearbyTitle">Cars nearby</h1></div>
           <span class="available"><i></i><span id="list-count">6</span> <span data-i18n="carsAvailable">available</span></span>
@@ -361,6 +918,25 @@
         <footer class="side-foot"><span data-i18n="pricingLabel">Demo pricing</span><strong data-i18n="pricingDisclosure">Illustrative rates · no live billing</strong></footer>
       </aside>
     </main>
+
+    <nav class="mobile-nav" aria-label="Main navigation" data-i18n-aria="navigation">
+      <button class="nav-button active" id="nav-map" type="button" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 3v15m6-12v15" stroke="currentColor" stroke-width="1.7"/></svg>
+        <span data-i18n="navFindCar">Αυτοκίνητα</span>
+      </button>
+      <button class="nav-button" id="nav-rewards" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        <span data-i18n="navRewards">Αστέρια</span>
+      </button>
+      <button class="nav-button" id="nav-garage" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3 10 9-6 9 6v10H3V10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M7 20v-7h10v7m-8-4h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span data-i18n="navGarage">Γκαράζ</span>
+      </button>
+      <button class="nav-button" id="nav-profile" type="button">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span data-i18n="navProfile">Προφίλ</span>
+      </button>
+    </nav>
   </div>
 
   <section class="profile-page" id="profile-page" aria-label="Your profile" data-i18n-aria="profileLabel">
@@ -372,6 +948,13 @@
         <div class="profile-stat"><strong id="profile-distance">0 km</strong><span data-i18n="statDistance">Distance</span></div>
         <div class="profile-stat"><strong id="profile-stars">120</strong><span data-i18n="statPoints">Ride points</span></div>
       </div>
+      <section class="reward-center" id="reward-center" aria-label="Stars reward center">
+        <div class="reward-heading"><div><p class="eyebrow">50 ΑΣΤΕΡΙΑ</p><h2>Κέντρο ανταμοιβών</h2></div><strong id="reward-balance">120 αστέρια</strong></div>
+        <div class="reward-options">
+          <article class="reward-option"><span class="reward-option-icon" aria-hidden="true">€</span><div><strong>€2 έκπτωση διαδρομής</strong><p>Εξαργύρωση με 50 αστέρια</p></div></article>
+          <article class="reward-option"><span class="reward-option-icon" aria-hidden="true">◷</span><div><strong>5 λεπτά προτεραιότητας</strong><p>Αναμονή σε ώρες αιχμής</p></div></article>
+        </div>
+      </section>
       <p class="profile-section-title" data-i18n="accountServices">ACCOUNT &amp; SERVICE</p>
       <div class="profile-row"><span data-i18n="identityLabel">Student verification</span><span data-i18n="identityValue">Demo only · not connected</span></div>
       <div class="profile-row"><span data-i18n="billingLabel">Billing</span><span data-i18n="billingValue">Illustrative rates</span></div>
@@ -384,12 +967,13 @@
   <div class="scrim" id="scrim"></div>
   <section class="vehicle-sheet" id="vehicle-sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
     <div class="sheet-handle"></div>
-    <div class="sheet-top"><span class="sheet-tag"><i></i><span data-i18n="vehicleAvailable">Available now</span></span><button class="icon-button" id="close-sheet" type="button" aria-label="Close vehicle details" data-i18n-aria="closeVehicle">✕</button></div>
+    <div class="sheet-top"><button class="sheet-back" id="close-sheet" type="button"><span aria-hidden="true">←</span> <span data-i18n="browseCars">Browse other cars</span></button><span class="sheet-tag"><i></i><span data-i18n="vehicleAvailable">Available now</span></span></div>
     <div class="sheet-car-art" aria-hidden="true">
       <svg viewBox="0 0 240 120" fill="none"><path d="M30 78c3-10 11-16 21-19l22-7 18-21c4-5 9-7 17-7h50c8 0 14 4 19 11l15 22 17 7c7 3 11 8 13 16v13H29l1-15Z" fill="#dce7d4" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="m82 50 16-19c2-3 6-4 10-4h21v23H82Zm53-23h22c5 0 10 3 13 8l11 15h-46V27Z" fill="#f7f8f2" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M31 70h40m112 0h22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="67" cy="88" r="12" fill="#314438" stroke="#fff" stroke-width="3"/><circle cx="187" cy="88" r="12" fill="#314438" stroke="#fff" stroke-width="3"/><path d="M96 68h21m-10-10v20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M100 58h13" stroke="#a4be5c" stroke-width="3" stroke-linecap="round"/></svg>
     </div>
-    <div class="sheet-title-row"><div><h2 id="sheet-title">Volkswagen e-up!</h2><p id="sheet-subtitle">Ηλεκτρικό · αυτόματο · 4 θέσεις</p></div><div class="sheet-price"><span id="sheet-price">0,19&nbsp;€</span><small> / <span data-i18n="minute">λεπτό</span></small></div></div>
-    <div class="specs"><div class="spec"><strong id="sheet-battery">85%</strong><span data-i18n="batteryLabel">Μπαταρία</span></div><div class="spec"><strong id="sheet-distance">300 μ.</strong><span data-i18n="walkDistance">Απόσταση με τα πόδια</span></div><div class="spec"><strong id="sheet-range">92 χλμ.</strong><span data-i18n="rangeLabel">Εκτιμώμενη αυτονομία</span></div></div>
+    <div class="sheet-title-row"><div><h2 id="sheet-title">Volkswagen e-up!</h2><p id="sheet-subtitle">Ηλεκτρικό · αυτόματο · 4 θέσεις</p></div></div>
+    <div class="vehicle-metrics"><div class="vehicle-metric"><span class="metric-label" data-i18n="batteryLabel">Μπαταρία</span><strong id="sheet-battery">85%</strong><span class="metric-progress"><i id="sheet-battery-progress" style="width:85%"></i></span></div><div class="vehicle-metric price-metric"><span class="metric-label" data-i18n="pricingLabel">Demo pricing</span><strong class="sheet-price"><span id="sheet-price">0,19&nbsp;€</span><small> / <span data-i18n="minute">λεπτό</span></small></strong></div></div>
+    <div class="specs"><div class="spec"><strong id="sheet-distance">300 μ.</strong><span data-i18n="walkDistance">Απόσταση με τα πόδια</span></div><div class="spec"><strong id="sheet-range">92 χλμ.</strong><span data-i18n="rangeLabel">Εκτιμώμενη αυτονομία</span></div></div>
     <p class="sheet-notice" data-i18n="reservationNotice">Reserve for up to 10 minutes. Your demo trip starts when you unlock the car.</p>
     <button class="primary-button" id="reserve-button" type="button"><span data-i18n="reserveVehicle">Reserve car</span><span aria-hidden="true">→</span></button>
     <button class="secondary-button" id="cancel-sheet" type="button" data-i18n="browseCars">Browse other cars</button>
@@ -414,7 +998,7 @@
       <p class="dialog-copy" id="trip-car-name" style="margin-bottom:5px">VW e-Up!</p>
       <div class="trip-cost" id="trip-cost">0,00&nbsp;€</div><p class="trip-detail"><span data-i18n="tripDuration">Διάρκεια</span> <span id="trip-duration">00:00</span> · <span id="trip-rate">0,19&nbsp;€</span> / <span data-i18n="minute">λεπτό</span></p>
       <p class="trip-parking-countdown" id="temporary-parking-countdown" hidden><span id="temporary-parking-label" data-i18n="temporaryParkingRemaining">Temporary parking remaining</span><strong id="temporary-parking-time">10:00</strong></p>
-      <div class="trip-actions"><button class="pause-button" id="temporary-parking" type="button">Ⅱ <span data-i18n="startTemporaryParking">Start temporary parking</span></button><button class="primary-button" id="return-vehicle" type="button" data-i18n="returnVehicle">Return car</button></div>
+      <div class="trip-actions" id="trip-actions"><button class="pause-button" id="temporary-parking" type="button">Ⅱ <span data-i18n="startTemporaryParking">Start temporary parking</span></button><button class="primary-button" id="return-vehicle" type="button" data-i18n="returnVehicle">Return car</button></div>
       <p class="reservation-note" data-i18n="parkingNotice">Return the car to an approved UniLoop parking area. No real vehicle is connected.</p>
     </section>
   </div>
@@ -494,7 +1078,7 @@
         pageTitle: "UniLoop · Campus Car Sharing in Athens", brandHome: "UniLoop map home", campusOptions: "Campus options", campusName: "Athens University of Economics and Business", campusSubtitle: "Patission campus · Athens",
         searchLabel: "Search the campus or vehicles", searchPlaceholder: "Search places or cars...", languageLabel: "Language", ridePoints: "Stars", profileOpen: "Open profile",
         mapLabel: "Athens campus vehicle map", mapMainBuilding: "Main building", mapVictoria: "Victoria", mapEvelpidon: "Evelpidon", mapMuseum: "National Museum", mapPedion: "Pedion tou Areos", mapAverof: "Averof",
-        mapCaptionMuseum: "National Archaeological Museum", mapCaptionSquare: "Victoria Square", mapPreview: "Illustrative map of the Patission campus", mapPreviewText: "Map preview · Patission campus", filterLabel: "Filter vehicles", filterAll: "All cars", filterElectric: "Electric", filterAvailable: "Available", markerLabel: "Available vehicle locations", yourLocation: "Your location", mapControls: "Map controls", zoomIn: "Zoom in", zoomOut: "Zoom out", locate: "Centre on my location", navigation: "Main navigation", navFindCar: "Find a car", navProfile: "Profile",
+        dashboardGreeting: "WELCOME TO UNILOOP", dashboardTitle: "A simpler way to get around", dashboardHighlight: "starts here.", dashboardSubtitle: "Discover available cars near the Patission campus.", dashboardAvailable: "Available near you", mapCaptionMuseum: "National Archaeological Museum", mapCaptionSquare: "Victoria Square", mapPreview: "Illustrative map of the Patission campus", mapPreviewText: "Map preview · Patission campus", filterLabel: "Filter vehicles", filterAll: "All cars", filterElectric: "Electric", filterAvailable: "Available", markerLabel: "Available vehicle locations", yourLocation: "Your location", mapControls: "Map controls", zoomIn: "Zoom in", zoomOut: "Zoom out", locate: "Centre on my location", navigation: "Main navigation", navFindCar: "Find a car", navRewards: "Stars", navGarage: "Garage", navProfile: "Profile",
         nearbyLabel: "Nearby vehicles", nearbyEyebrow: "NEARBY VEHICLES", nearbyTitle: "Cars nearby", carsAvailable: "available", pricingLabel: "Demo pricing", pricingDisclosure: "Illustrative rates · no live billing",
         accountEyebrow: "YOUR ACCOUNT", accountTitle: "Your account", profileLabel: "Your profile", profileName: "Alex", profileSubtitle: "Athens · UniLoop demo account", statTrips: "Trips", statDistance: "Distance", statPoints: "Stars", accountServices: "ACCOUNT & SERVICE", identityLabel: "Student verification", identityValue: "Demo only · not connected", billingLabel: "Billing", billingValue: "Illustrative rates", supportLabel: "Local requirements", supportValue: "No real vehicle or payment service", recentTrips: "RECENT TRIPS", emptyHistory: "No trips yet.",
         vehicleAvailable: "Available now", closeVehicle: "Close vehicle details", minute: "min", batteryLabel: "Battery", walkDistance: "Walk away", rangeLabel: "Est. range", reservationNotice: "Reserve for up to 10 minutes. Your demo trip starts when you unlock the car.", reserveVehicle: "Reserve car", browseCars: "Browse other cars", closeReservation: "Close reservation", reservationTitle: "Car reserved for you", reservationDescription: "Head to the car and start your trip within 10 minutes.", unlockCar: "Unlock and start trip", cancelReservation: "Cancel reservation", prototypeNotice: "Prototype only. This will not unlock a real vehicle.", batteryTooLow: "Battery too low to reserve",
@@ -507,7 +1091,7 @@
         pageTitle: "UniLoop · Κοινόχρηστα αυτοκίνητα στην Αθήνα", brandHome: "Αρχική χάρτη UniLoop", campusOptions: "Επιλογές πανεπιστημιούπολης", campusName: "Οικονομικό Πανεπιστήμιο Αθηνών", campusSubtitle: "Πανεπιστημιούπολη Πατησίων · Αθήνα",
         searchLabel: "Αναζήτηση χώρων ή οχημάτων", searchPlaceholder: "Αναζήτηση χώρου ή αυτοκινήτου...", languageLabel: "Γλώσσα", ridePoints: "Αστέρια", profileOpen: "Άνοιγμα προφίλ",
         mapLabel: "Χάρτης οχημάτων στην Αθήνα", mapMainBuilding: "Κεντρικό κτίριο", mapVictoria: "Βικτώρια", mapEvelpidon: "Ευελπίδων", mapMuseum: "Εθνικό Μουσείο", mapPedion: "Πεδίον του Άρεως", mapAverof: "Αβέρωφ",
-        mapCaptionMuseum: "Εθνικό Αρχαιολογικό Μουσείο", mapCaptionSquare: "Πλατεία Βικτωρίας", mapPreview: "Ενδεικτικός χάρτης της πανεπιστημιούπολης Πατησίων", mapPreviewText: "Χάρτης · Πανεπιστημιούπολη Πατησίων", filterLabel: "Φίλτρα οχημάτων", filterAll: "Όλα", filterElectric: "Ηλεκτρικά", filterAvailable: "Διαθέσιμα", markerLabel: "Θέσεις διαθέσιμων οχημάτων", yourLocation: "Η τοποθεσία σας", mapControls: "Χειριστήρια χάρτη", zoomIn: "Μεγέθυνση χάρτη", zoomOut: "Σμίκρυνση χάρτη", locate: "Κεντράρισμα στην τοποθεσία μου", navigation: "Κύρια πλοήγηση", navFindCar: "Αυτοκίνητα", navProfile: "Προφίλ",
+        dashboardGreeting: "ΚΑΛΩΣ ΗΡΘΕΣ ΣΤΟ UNILOOP", dashboardTitle: "Μια πιο εύκολη διαδρομή", dashboardHighlight: "ξεκινά εδώ.", dashboardSubtitle: "Ανακάλυψε τα διαθέσιμα οχήματα κοντά στην πανεπιστημιούπολη.", dashboardAvailable: "Κοντά σου τώρα", mapCaptionMuseum: "Εθνικό Αρχαιολογικό Μουσείο", mapCaptionSquare: "Πλατεία Βικτωρίας", mapPreview: "Ενδεικτικός χάρτης της πανεπιστημιούπολης Πατησίων", mapPreviewText: "Χάρτης · Πανεπιστημιούπολη Πατησίων", filterLabel: "Φίλτρα οχημάτων", filterAll: "Όλα", filterElectric: "Ηλεκτρικά", filterAvailable: "Διαθέσιμα", markerLabel: "Θέσεις διαθέσιμων οχημάτων", yourLocation: "Η τοποθεσία σας", mapControls: "Χειριστήρια χάρτη", zoomIn: "Μεγέθυνση χάρτη", zoomOut: "Σμίκρυνση χάρτη", locate: "Κεντράρισμα στην τοποθεσία μου", navigation: "Κύρια πλοήγηση", navFindCar: "Αυτοκίνητα", navRewards: "Αστέρια", navGarage: "Γκαράζ", navProfile: "Προφίλ",
         nearbyLabel: "Κοντινά οχήματα", nearbyEyebrow: "ΚΟΝΤΙΝΑ ΟΧΗΜΑΤΑ", nearbyTitle: "Οχήματα κοντά σας", carsAvailable: "διαθέσιμα", pricingLabel: "Τιμές επίδειξης", pricingDisclosure: "Ενδεικτικές τιμές · χωρίς χρέωση",
         accountEyebrow: "Ο ΛΟΓΑΡΙΑΣΜΟΣ ΣΑΣ", accountTitle: "Ο λογαριασμός σας", profileLabel: "Το προφίλ σας", profileName: "Αλέξης", profileSubtitle: "Αθήνα · δοκιμαστικός λογαριασμός UniLoop", statTrips: "Διαδρομές", statDistance: "Απόσταση", statPoints: "Αστέρια", accountServices: "ΛΟΓΑΡΙΑΣΜΟΣ & ΥΠΗΡΕΣΙΕΣ", identityLabel: "Φοιτητική ταυτοποίηση", identityValue: "Μόνο επίδειξη · χωρίς σύνδεση", billingLabel: "Χρέωση", billingValue: "Ενδεικτικές τιμές", supportLabel: "Τοπικές υπηρεσίες", supportValue: "Δεν συνδέεται όχημα ή πληρωμή", recentTrips: "ΠΡΟΣΦΑΤΕΣ ΔΙΑΔΡΟΜΕΣ", emptyHistory: "Δεν υπάρχουν διαδρομές ακόμη.",
         vehicleAvailable: "Διαθέσιμο τώρα", closeVehicle: "Κλείσιμο λεπτομερειών οχήματος", minute: "λεπτό", batteryLabel: "Μπαταρία", walkDistance: "Απόσταση με τα πόδια", rangeLabel: "Εκτιμώμενη αυτονομία", reservationNotice: "Κράτηση έως 10 λεπτά. Η δοκιμαστική διαδρομή ξεκινά με το ξεκλείδωμα.", reserveVehicle: "Κράτηση αυτοκινήτου", browseCars: "Δείτε άλλα αυτοκίνητα", closeReservation: "Κλείσιμο κράτησης", reservationTitle: "Το αυτοκίνητο κρατήθηκε για εσάς", reservationDescription: "Πηγαίνετε στο αυτοκίνητο και ξεκινήστε εντός 10 λεπτών.", unlockCar: "Ξεκλείδωμα και έναρξη", cancelReservation: "Ακύρωση κράτησης", prototypeNotice: "Μόνο για επίδειξη. Δεν ξεκλειδώνει πραγματικό όχημα.", batteryTooLow: "Ανεπαρκής μπαταρία για κράτηση",
@@ -547,9 +1131,208 @@
     let toastTimeout = null;
     const language = "el";
     const rideHistory = [];
+    const tourSteps = [
+      {
+        id: "welcome",
+        targets: [
+          { selector: "#welcome-login", copy: "Καλώς ήρθατε στο UniLoop Athens! Αποκλειστικά για φοιτητές: συνδεθείτε με το ακαδημαϊκό σας email ή επιλέξτε δοκιμαστική πρόσβαση." },
+          { selector: ".welcome-onboarding", copy: "Η πλήρης ροή έχει 4 βήματα: επιλογή οχήματος, κράτηση 10 λεπτών, οδήγηση με προσωρινή στάθμευση έως 10 λεπτά, και επιστροφή με φωτογραφία." },
+          { selector: "#welcome-start", copy: "Κερδίστε αστέρια με επιλέξιμη επιστροφή. Συλλέξτε 50 αστέρια για έκπτωση €2 ή προτεραιότητα αναμονής 5 λεπτών σε ώρες αιχμής." }
+        ]
+      },
+      {
+        id: "home",
+        targets: [
+          { selector: "#dashboard-stats", copy: "Δείτε εδώ το υπόλοιπο των αστέρων, την κατάσταση φοιτητικής συμμετοχής και τις διαθέσιμες προωθήσεις." },
+          { selector: "#map-view", copy: "Πατήστε οποιοδήποτε κοντινό αυτοκίνητο στον χάρτη ή στη λίστα για να δείτε λεπτομέρειες και να το κρατήσετε για 10 λεπτά." },
+          { selector: "#nearby-panel", copy: "Η λίστα δείχνει μοντέλο, απόσταση και τιμή ανά λεπτό. Επιλέξτε ένα για συνέχεια." }
+        ]
+      },
+      {
+        id: "vehicle",
+        targets: [
+          { selector: "#reserve-button", copy: "Όταν φτάσετε στο αυτοκίνητο, πατήστε εδώ για εικονικό ξεκλείδωμα, έλεγχο του οχήματος και έναρξη της διαδρομή σας." }
+        ]
+      },
+      {
+        id: "ride",
+        targets: [
+          { selector: "#trip-actions", copy: "Χρειάζεστε μια σύντομη στάση; χρησιμοποιήστε την Προσωρινή στάθμευση (έως 10 λεπτά συνολικά, η χρέωση συνεχίζεται). Για επιστροφή, πατήστε Επιστροφή αυτοκινήτου." }
+        ]
+      },
+      {
+        id: "return",
+        targets: [
+          { selector: "#return-step-location", copy: "Σταθμεύστε σε προτεινόμενο σημείο κοντά στον προορισμό σας για να κερδίσετε μπόνους +10 αστέρια." },
+          { selector: "#return-step-photo", copy: "Υποχρεωτικό βήμα: τραβήξτε καθαρή φωτογραφία όπου φαίνονται η πινακίδα και η θέση στάθμευσης. Μην χρησιμοποιείτε ιδιωτικά γκαράζ ή χώρους με περιορισμένη πρόσβαση." }
+        ]
+      },
+      {
+        id: "rewards",
+        targets: [
+          { selector: "#profile-stars, #summary-points-earned", copy: "Το υπόλοιπό σας αυξάνεται με επιλέξιμα σημεία επιστροφής· κάθε επιλογή προσφέρει +10 αστέρια." },
+          { selector: "#reward-center", copy: "Με 50 αστέρια μπορείτε να εξαργυρώσετε έκπτωση 2 € στη διαδρομή ή προτεραιότητα αναμονής 5 λεπτών σε ώρες αιχμής." }
+        ]
+      }
+    ];
     const currencyFormatters = {
       el: new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" })
     };
+    let tourState = null;
+    let welcomeStage = 0;
+
+    function readTourSeen() {
+      try {
+        return JSON.parse(localStorage.getItem("uniloop_seen_pages") || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function markTourSeen(pageId) {
+      const seen = readTourSeen();
+      if (!seen.includes(pageId)) {
+        seen.push(pageId);
+        localStorage.setItem("uniloop_seen_pages", JSON.stringify(seen));
+      }
+    }
+
+    function isTourSkipped() {
+      try {
+        return localStorage.getItem("uniloop_tour_skipped") === "true";
+      } catch {
+        return false;
+      }
+    }
+
+    function maybeStartTour(pageId) {
+      if (isTourSkipped() || readTourSeen().includes(pageId)) return;
+      startTour(pageId);
+    }
+
+    function getTourTarget(selector) {
+      const selectors = selector.split(",").map((item) => item.trim());
+      for (const item of selectors) {
+        const element = document.querySelector(item);
+        if (element && !element.closest(".hidden") && element.offsetParent !== null) return element;
+      }
+      return null;
+    }
+
+    function positionTourCard(target) {
+      const card = document.getElementById("coach-mark");
+      const cardRect = card.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const gap = 14;
+      let left;
+      let top;
+
+      if (!target) {
+        left = Math.max(12, (viewportWidth - cardRect.width) / 2);
+        top = Math.max(12, viewportHeight - cardRect.height - 18);
+      } else {
+        const rect = target.getBoundingClientRect();
+        if (viewportWidth - rect.right - cardRect.width - gap >= 12) {
+          left = rect.right + gap;
+          top = Math.max(12, rect.top);
+        } else if (rect.left - cardRect.width - gap >= 12) {
+          left = rect.left - cardRect.width - gap;
+          top = Math.max(12, rect.top);
+        } else if (rect.bottom + cardRect.height + gap <= viewportHeight - 12) {
+          left = Math.max(12, Math.min(viewportWidth - cardRect.width - 12, rect.left));
+          top = rect.bottom + gap;
+        } else if (rect.top - cardRect.height - gap >= 12) {
+          left = Math.max(12, Math.min(viewportWidth - cardRect.width - 12, rect.left));
+          top = rect.top - cardRect.height - gap;
+        } else {
+          left = Math.max(12, (viewportWidth - cardRect.width) / 2);
+          top = viewportHeight - cardRect.height - 12;
+        }
+      }
+
+      card.style.left = `${left}px`;
+      card.style.top = `${top}px`;
+    }
+
+    function renderTourStep() {
+      if (!tourState) return;
+      const step = tourSteps[tourState.stepIndex];
+      const targetConfig = step.targets[tourState.targetIndex];
+      const target = getTourTarget(targetConfig.selector);
+      const highlight = document.getElementById("tour-highlight");
+      const card = document.getElementById("coach-mark");
+      card.classList.remove("hidden");
+      highlight.classList.toggle("hidden", !target);
+
+      if (target) {
+        const rect = target.getBoundingClientRect();
+        const padding = 5;
+        highlight.style.left = `${Math.max(6, rect.left - padding)}px`;
+        highlight.style.top = `${Math.max(6, rect.top - padding)}px`;
+        highlight.style.width = `${rect.width + padding * 2}px`;
+        highlight.style.height = `${rect.height + padding * 2}px`;
+        target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      }
+
+      document.getElementById("coach-progress").textContent = `Step ${tourState.stepIndex + 1} of ${tourSteps.length}`;
+      document.getElementById("coach-copy").textContent = targetConfig.copy;
+      document.getElementById("coach-title").textContent = step.id === "welcome" ? "UniLoop Athens"
+        : step.id === "home" ? "Home & Map"
+        : step.id === "vehicle" ? "Vehicle Details"
+        : step.id === "ride" ? "Active Ride"
+        : step.id === "return" ? "Smart Return"
+        : "Rewards";
+      document.getElementById("coach-next-label").textContent =
+        tourState.stepIndex === tourSteps.length - 1 && tourState.targetIndex === step.targets.length - 1
+          ? "Got it ✓"
+          : "Next →";
+
+      window.requestAnimationFrame(() => positionTourCard(target));
+    }
+
+    function startTour(pageId) {
+      const stepIndex = tourSteps.findIndex((step) => step.id === pageId);
+      if (stepIndex < 0) return;
+      tourState = { stepIndex, targetIndex: 0 };
+      renderTourStep();
+    }
+
+    function closeTour(markSeen = true) {
+      if (tourState && markSeen) markTourSeen(tourSteps[tourState.stepIndex].id);
+      tourState = null;
+      document.getElementById("coach-mark").classList.add("hidden");
+      document.getElementById("tour-highlight").classList.add("hidden");
+    }
+
+    function skipTour() {
+      try {
+        localStorage.setItem("uniloop_tour_skipped", "true");
+      } catch {}
+      closeTour(false);
+    }
+
+    function replayCurrentTour() {
+      try {
+        localStorage.removeItem("uniloop_tour_skipped");
+      } catch {}
+      const currentSeen = readTourSeen();
+      let pageId = "home";
+      if (!document.body.classList.contains("welcome-active")) {
+        if (document.getElementById("summary-overlay").classList.contains("open")) pageId = "rewards";
+        else if (document.getElementById("return-overlay").classList.contains("open")) pageId = "return";
+        else if (document.getElementById("trip-overlay").classList.contains("open")) pageId = "ride";
+        else if (document.getElementById("vehicle-sheet").classList.contains("open")) pageId = "vehicle";
+        else if (document.getElementById("profile-page").classList.contains("open")) pageId = "rewards";
+      } else {
+        pageId = "welcome";
+      }
+      const filtered = currentSeen.filter((id) => id !== pageId);
+      try {
+        localStorage.setItem("uniloop_seen_pages", JSON.stringify(filtered));
+      } catch {}
+      startTour(pageId);
+    }
 
     function t(key, values = {}) {
       let text = messages.el[key] || key;
@@ -614,7 +1397,7 @@
         marker.style.left = `${vehicle.x}%`;
         marker.style.top = `${vehicle.y}%`;
         marker.setAttribute("aria-label", t("tripAria", { name: vehicle.name, price: formatCurrency(vehicle.price), distance: formatDistance(vehicle.distance) }));
-        marker.innerHTML = `<span class="marker-icon">${carIcon}</span><span class="marker-price">${formatCurrency(vehicle.price)}<small>/λεπτό</small></span>`;
+        marker.innerHTML = `<span class="marker-icon">${carIcon}</span><span class="marker-copy"><strong>${vehicle.name}</strong><small>${formatDistance(vehicle.distance)}</small></span>`;
         marker.addEventListener("click", () => openVehicle(vehicle.id));
         mapMarkers.append(marker);
 
@@ -622,10 +1405,11 @@
         card.type = "button";
         card.className = "vehicle-card";
         card.setAttribute("aria-label", t("viewCarAria", { name: vehicle.name }));
-        card.innerHTML = `<span class="car-thumb">${carIcon}</span><span class="car-info"><strong>${vehicle.name}</strong><span><b>● ${vehicle.battery}%</b> ${t("batteryAndWalk", { distance: formatDistance(vehicle.distance) })}</span><span>${vehicle.place.el}</span></span><span class="car-price">${formatCurrency(vehicle.price)}<small>/λεπτό</small></span>`;
+        card.innerHTML = `<span class="car-thumb">${carIcon}</span><span class="car-info"><strong>${vehicle.name}</strong><span><b>● ${vehicle.battery}%</b> ${t("batteryAndWalk", { distance: formatDistance(vehicle.distance) })}</span><span>${vehicle.place.el}</span><span class="car-battery" role="progressbar" aria-label="${vehicle.battery}%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${vehicle.battery}"><i style="width:${vehicle.battery}%"></i></span></span><span class="car-price">${formatCurrency(vehicle.price)}<small>/λεπτό</small></span>`;
         card.addEventListener("click", () => openVehicle(vehicle.id));
         vehicleList.append(card);
       });
+      document.getElementById("dashboard-car-count").textContent = visibleVehicles.length;
     }
 
     function openVehicle(vehicleId) {
@@ -636,6 +1420,7 @@
       document.getElementById("sheet-subtitle").textContent = vehicle.type.el;
       document.getElementById("sheet-price").textContent = formatCurrency(vehicle.price);
       document.getElementById("sheet-battery").textContent = `${vehicle.battery}%`;
+      document.getElementById("sheet-battery-progress").style.width = `${vehicle.battery}%`;
       document.getElementById("sheet-distance").textContent = formatDistance(vehicle.distance);
       document.getElementById("sheet-range").textContent = `${formatNumber(vehicle.range)} χλμ.`;
       document.getElementById("reservation-car").textContent = `${vehicle.name} · ${vehicle.place.el}`;
@@ -644,6 +1429,7 @@
       sheet.classList.add("open");
       scrim.classList.add("visible");
       renderVehicles();
+      window.setTimeout(() => maybeStartTour("vehicle"), 220);
     }
 
     function closeSheet() {
@@ -655,6 +1441,11 @@
     function showOverlay(name) {
       Object.values(overlays).forEach((overlay) => overlay.classList.remove("open"));
       overlays[name].classList.add("open");
+      window.setTimeout(() => {
+        if (name === "trip") maybeStartTour("ride");
+        if (name === "return") maybeStartTour("return");
+        if (name === "summary") maybeStartTour("rewards");
+      }, 180);
     }
 
     function hideOverlays() {
@@ -868,9 +1659,11 @@
         ? t("receiptNoReward")
         : document.querySelector(`input[name="return-reward"][value="${rewardValue}"]`).parentElement.textContent.trim();
       document.getElementById("credit-count").textContent = Number(document.getElementById("credit-count").textContent) + starsEarned;
+      document.getElementById("dashboard-star-count").textContent = document.getElementById("credit-count").textContent;
       document.getElementById("profile-trips").textContent = totalTrips;
       document.getElementById("profile-distance").textContent = `${formatNumber(totalDistance, 1)} χλμ.`;
       document.getElementById("profile-stars").textContent = document.getElementById("credit-count").textContent;
+      document.getElementById("reward-balance").textContent = `${document.getElementById("credit-count").textContent} αστέρια`;
       const historyItem = document.createElement("div");
       historyItem.className = "profile-row";
       const date = new Intl.DateTimeFormat("el-GR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date());
@@ -887,17 +1680,70 @@
       returnPhotoUrl = null;
     }
 
+    function renderPage(page) {
+      const profilePage = document.getElementById("profile-page");
+      const pages = ["map", "rewards", "garage", "profile"];
+      const activePage = pages.includes(page) ? page : "map";
+      document.body.classList.toggle("garage-open", activePage === "garage");
+      document.getElementById("workspace").classList.toggle("dashboard-hidden", activePage !== "map");
+      profilePage.classList.toggle("open", activePage === "profile" || activePage === "rewards");
+      pages.forEach((name) => {
+        const button = document.getElementById(`nav-${name}`);
+        button.classList.toggle("active", name === activePage);
+        if (name === activePage) button.setAttribute("aria-current", "page");
+        else button.removeAttribute("aria-current");
+      });
+      if (activePage === "rewards") {
+        requestAnimationFrame(() => document.querySelector(".profile-stats").scrollIntoView({ behavior: "smooth", block: "center" }));
+        window.setTimeout(() => maybeStartTour("rewards"), 220);
+      }
+    }
+
+    function navigateTo(page) {
+      if (page === window.history.state?.uniloopPage) return;
+      window.history.pushState({ uniloopPage: page }, "", `#${page}`);
+      renderPage(page);
+    }
+
+    function setWelcomeStage(index) {
+      welcomeStage = Math.max(0, Math.min(3, index));
+      document.querySelectorAll(".welcome-stage").forEach((stage) => {
+        stage.classList.toggle("active", Number(stage.dataset.stage) === welcomeStage);
+      });
+      document.querySelectorAll(".welcome-dot").forEach((dot) => {
+        dot.classList.toggle("active", Number(dot.dataset.dot) === welcomeStage);
+      });
+      document.getElementById("welcome-start-label").textContent =
+        welcomeStage === 3 ? "Βρείτε αυτοκίνητο →" : "Επόμενο →";
+    }
+
+    function enterApp() {
+      const welcome = document.getElementById("welcome-screen");
+      const rules = document.getElementById("welcome-rules");
+      rules.classList.remove("open");
+      document.body.classList.remove("welcome-active");
+      welcome.classList.add("hidden");
+      window.history.pushState({ uniloopPage: "map" }, "", "#map");
+      renderPage("map");
+      window.setTimeout(() => maybeStartTour("home"), 340);
+      window.setTimeout(() => welcome.setAttribute("hidden", ""), 300);
+    }
+
+    function showWelcome() {
+      const welcome = document.getElementById("welcome-screen");
+      welcome.removeAttribute("hidden");
+      welcome.classList.remove("hidden");
+      document.body.classList.add("welcome-active");
+    }
+
     function openProfile() {
       closeSheet();
-      document.getElementById("profile-page").classList.add("open");
-      document.getElementById("nav-map").classList.remove("active");
-      document.getElementById("nav-profile").classList.add("active");
+      navigateTo("profile");
     }
 
     function showMap() {
-      document.getElementById("profile-page").classList.remove("open");
-      document.getElementById("nav-profile").classList.remove("active");
-      document.getElementById("nav-map").classList.add("active");
+      renderPage("map");
+      window.history.replaceState({ uniloopPage: "map" }, "", "#map");
     }
 
     document.getElementById("reserve-button").addEventListener("click", startReservation);
@@ -931,7 +1777,46 @@
     document.querySelectorAll("[data-close=reservation]").forEach((button) => button.addEventListener("click", () => cancelReservation()));
     document.getElementById("profile-button").addEventListener("click", openProfile);
     document.getElementById("nav-profile").addEventListener("click", openProfile);
-    document.getElementById("nav-map").addEventListener("click", showMap);
+    document.getElementById("nav-rewards").addEventListener("click", () => navigateTo("rewards"));
+    document.getElementById("nav-garage").addEventListener("click", () => navigateTo("garage"));
+    document.getElementById("nav-map").addEventListener("click", () => navigateTo("map"));
+    document.getElementById("help-tour").addEventListener("click", replayCurrentTour);
+    document.getElementById("coach-skip").addEventListener("click", skipTour);
+    document.getElementById("coach-next").addEventListener("click", () => {
+      if (!tourState) return;
+      const step = tourSteps[tourState.stepIndex];
+      if (tourState.targetIndex < step.targets.length - 1) {
+        tourState.targetIndex += 1;
+        renderTourStep();
+        return;
+      }
+      const finishedPage = step.id;
+      closeTour(true);
+      if (finishedPage === "welcome") enterApp();
+    });
+    document.getElementById("dashboard-stars").addEventListener("click", () => navigateTo("rewards"));
+    document.getElementById("dashboard-membership").addEventListener("click", openProfile);
+    document.getElementById("dashboard-vehicles").addEventListener("click", () => navigateTo("garage"));
+    document.getElementById("welcome-start").addEventListener("click", () => {
+      if (welcomeStage < 3) setWelcomeStage(welcomeStage + 1);
+      else enterApp();
+    });
+    document.querySelectorAll(".welcome-dot").forEach((dot) => {
+      dot.addEventListener("click", () => setWelcomeStage(Number(dot.dataset.dot)));
+    });
+    document.getElementById("welcome-skip").addEventListener("click", () => {
+      try {
+        localStorage.setItem("uniloop_tour_skipped", "true");
+      } catch {}
+      closeTour(false);
+      enterApp();
+    });
+    document.getElementById("welcome-login").addEventListener("click", () => showToast("Η σύνδεση είναι διαθέσιμη μόνο ως δοκιμαστική παρουσίαση."));
+    document.getElementById("welcome-rules-open").addEventListener("click", () => document.getElementById("welcome-rules").classList.add("open"));
+    document.getElementById("welcome-rules-close").addEventListener("click", () => document.getElementById("welcome-rules").classList.remove("open"));
+    document.getElementById("welcome-rules").addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) event.currentTarget.classList.remove("open");
+    });
     document.getElementById("home-button").addEventListener("click", showMap);
     document.getElementById("campus-button").addEventListener("click", () => showToast(t("campusToast")));
     document.getElementById("locate-button").addEventListener("click", () => showToast(t("locationToast")));
@@ -958,11 +1843,22 @@
         document.getElementById("search-input").focus();
       }
       if (event.key === "Escape") {
-        if (overlays.reservation.classList.contains("open")) cancelReservation();
+        if (document.getElementById("welcome-rules").classList.contains("open")) {
+          document.getElementById("welcome-rules").classList.remove("open");
+        } else if (overlays.reservation.classList.contains("open")) cancelReservation();
         else if (sheet.classList.contains("open")) closeSheet();
-        else if (document.getElementById("profile-page").classList.contains("open")) showMap();
+        else if (document.getElementById("profile-page").classList.contains("open") || document.body.classList.contains("garage-open")) showMap();
       }
     });
+    window.history.replaceState({ uniloopPage: "welcome" }, "", "#welcome");
+    window.addEventListener("popstate", (event) => {
+      if (event.state?.uniloopPage === "welcome") showWelcome();
+      else renderPage(event.state?.uniloopPage || "map");
+    });
+    window.addEventListener("resize", () => {
+      if (tourState) renderTourStep();
+    });
+    window.setTimeout(() => maybeStartTour("welcome"), 500);
     renderVehicles();
   </script>
 </body>
